@@ -1,148 +1,377 @@
-# web.py
+#!/usr/bin/env python3
+"""
+Production-ready Flask web application for Telegram message link generation
+Compatible with Render.com free deployment
+"""
+
 import os
-import logging
-import random
-import string
-from flask import Flask, render_template_string, request, jsonify
+import sys
+import uuid
+import time
+import requests
+from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify
+from datetime import datetime, timedelta
+from urllib.parse import urlencode
+import secrets
+import json
+from werkzeug.utils import secure_filename
 
-# Configure logging so Render logs show details
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
-
-# Try safe import of tgbot (so import error messages are clearer)
-try:
-    from tgbot import send_message_to_admin
-except Exception as e:
-    # create a stub so the app can start and show a clear error when used
-    logger.exception("Failed to import tgbot.send_message_to_admin: %s", e)
-
-    def send_message_to_admin(bot_token, admin_id, message):
-        logger.error("tgbot import failed; cannot send. Called with token=%s admin=%s message=%s",
-                     bot_token, admin_id, message)
-        return False
+# Add current directory to Python path
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 app = Flask(__name__)
+app.secret_key = os.environ.get('SECRET_KEY', secrets.token_hex(32))
 
-# Simple in-memory store for links (keeps things simple for free Render)
-BOT_LINKS = {}
+# Configuration
+UPLOAD_FOLDER = '/tmp'
+ALLOWED_EXTENSIONS = {'txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif'}
 
-# Home page template
-HOME_HTML = """
-<!DOCTYPE html>
-<html>
-<head><meta charset="utf-8"><title>Telegram Link Generator</title></head>
-<body style="font-family:Arial,Helvetica,sans-serif;background:#0f1720;color:#fff;text-align:center;padding:50px;">
-  <h1>Telegram Link Generator</h1>
-  <form method="POST">
-    <input name="admin_id" placeholder="Admin ID" required style="padding:8px;width:320px;margin:6px"><br>
-    <input name="bot_token" placeholder="Bot Token" required style="padding:8px;width:320px;margin:6px"><br>
-    <button type="submit" style="padding:10px 20px">Generate Link</button>
-  </form>
-  {% if link %}
-    <div style="margin-top:20px;background:rgba(255,255,255,0.05);display:inline-block;padding:12px;border-radius:8px;">
-      <strong>Your link:</strong><br>
-      <a href="{{ link }}" style="color:#50fa7b" target="_blank">{{ link }}</a>
-    </div>
-  {% endif %}
-  <p style="margin-top:18px;color:#aab3bf;font-size:13px">API: /link/admin{admin_id}&token{bot_token}</p>
-</body>
-</html>
-"""
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
 
-# Send page template
-SEND_HTML = """
-<!DOCTYPE html>
-<html>
-<head><meta charset="utf-8"><title>Send Messages</title></head>
-<body style="font-family:Arial,Helvetica,sans-serif;background:#0b1220;color:#fff;text-align:center;padding:50px;">
-  <h1>Send Message to Admin</h1>
-  <form method="POST">
-    <textarea name="msg1" required placeholder="Message 1" style="width:360px;height:80px;padding:8px;margin:8px"></textarea><br>
-    <textarea name="msg2" required placeholder="Message 2" style="width:360px;height:80px;padding:8px;margin:8px"></textarea><br>
-    <button type="submit" style="padding:10px 20px">Send Both Messages</button>
-  </form>
-  {% if message %}
-    <div style="margin-top:18px;color:#50fa7b"><strong>{{ message }}</strong></div>
-  {% endif %}
-</body>
-</html>
-"""
+# In-memory storage for demonstration (use database in production)
+generated_links = {}  # Store active links
+admin_data = {}  # Store all generated data
 
-@app.route("/", methods=["GET", "POST"])
+class TelegramBot:
+    def __init__(self, bot_token):
+        self.bot_token = bot_token
+        self.base_url = f"https://api.telegram.org/bot{bot_token}"
+    
+    def send_message(self, chat_id, text):
+        """Send message via Telegram Bot API"""
+        url = f"{self.base_url}/sendMessage"
+        data = {
+            "chat_id": chat_id,
+            "text": text,
+            "parse_mode": "HTML"
+        }
+        try:
+            response = requests.post(url, data=data, timeout=10)
+            return response.status_code == 200
+        except Exception as e:
+            print(f"Error sending message: {e}")
+            return False
+    
+    def get_bot_info(self):
+        """Get bot information"""
+        url = f"{self.base_url}/getMe"
+        try:
+            response = requests.get(url, timeout=10)
+            if response.status_code == 200:
+                return response.json()
+            return None
+        except Exception as e:
+            print(f"Error getting bot info: {e}")
+            return None
+
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+# Routes
+@app.route('/')
 def home():
-    link = None
-    if request.method == "POST":
-        admin_id = (request.form.get("admin_id") or "").strip()
-        bot_token = (request.form.get("bot_token") or "").strip()
-        if not admin_id or not bot_token:
-            return render_template_string(HOME_HTML, link=None)
-        key = ''.join(random.choices(string.ascii_letters + string.digits, k=8))
-        BOT_LINKS[key] = {"admin": admin_id, "token": bot_token}
-        link = request.url_root.rstrip("/") + f"/send/{key}"
-        logger.info("Generated link %s for admin %s", link, admin_id)
-    return render_template_string(HOME_HTML, link=link)
+    """Home page with form to generate links"""
+    if 'admin_logged_in' in session and session['admin_logged_in']:
+        return redirect(url_for('admin_dashboard'))
+    
+    stats = {
+        'total_links': len([link for link in generated_links.values() if not link['used']]),
+        'total_messages': sum(len(link.get('sent_messages', [])) for link in generated_links.values()),
+        'active_admins': len(set(link['admin_id'] for link in generated_links.values()))
+    }
+    
+    return render_template('home.html', stats=stats)
 
-@app.route("/link/admin<admin_id>&token<bot_token>", methods=["GET"])
-def api_generate_link(admin_id, bot_token):
-    """API endpoint for generating links:
-       /link/admin{admin_id}&token{bot_token}
-    """
-    admin_id = str(admin_id or "").strip()
-    bot_token = str(bot_token or "").strip()
-    if not admin_id or not bot_token:
-        return jsonify({"status":"error","message":"admin_id and bot_token required"}), 400
+@app.route('/generate_link', methods=['POST'])
+def generate_link():
+    """Generate unique link for message sending"""
+    bot_token = request.form.get('bot_token', '').strip()
+    admin_id = request.form.get('admin_id', '').strip()
+    
+    if not bot_token or not admin_id:
+        flash('Bot Token and Admin ID are required!', 'error')
+        return redirect(url_for('home'))
+    
+    # Validate bot token format
+    if not bot_token.startswith(('1234567890:')):
+        flash('Invalid bot token format!', 'error')
+        return redirect(url_for('home'))
+    
+    # Validate admin ID format
+    if not admin_id.isdigit():
+        flash('Admin ID must be a numeric value!', 'error')
+        return redirect(url_for('home'))
+    
+    # Test bot token
+    bot = TelegramBot(bot_token)
+    bot_info = bot.get_bot_info()
+    if not bot_info or not bot_info.get('ok'):
+        flash('Invalid bot token! Please check your bot token.', 'error')
+        return redirect(url_for('home'))
+    
+    # Generate unique link ID
+    link_id = str(uuid.uuid4()).replace('-', '').upper()[:8]
+    unique_link = f"/send/{link_id}"
+    
+    # Store link data with expiration (24 hours)
+    expiration_time = datetime.now() + timedelta(hours=24)
+    
+    generated_links[link_id] = {
+        'bot_token': bot_token,
+        'admin_id': admin_id,
+        'created_at': datetime.now().isoformat(),
+        'expiration_time': expiration_time.isoformat(),
+        'used': False,
+        'sent_messages': [],
+        'bot_username': bot_info.get('result', {}).get('username', 'Unknown')
+    }
+    
+    # Store in admin data
+    admin_data[admin_id] = admin_data.get(admin_id, {})
+    admin_data[admin_id]['links'] = admin_data[admin_id].get('links', [])
+    admin_data[admin_id]['links'].append({
+        'link_id': link_id,
+        'link_url': unique_link,
+        'created_at': datetime.now().isoformat(),
+        'used': False,
+        'bot_username': bot_info.get('result', {}).get('username', 'Unknown')
+    })
+    
+    # Store bot token for admin
+    if 'bot_tokens' not in admin_data[admin_id]:
+        admin_data[admin_id]['bot_tokens'] = []
+    if bot_token not in admin_data[admin_id]['bot_tokens']:
+        admin_data[admin_id]['bot_tokens'].append(bot_token)
+    
+    return render_template('link_generated.html', link=unique_link, link_id=link_id)
 
-    key = ''.join(random.choices(string.ascii_letters + string.digits, k=8))
-    BOT_LINKS[key] = {"admin": admin_id, "token": bot_token}
-    link = request.url_root.rstrip("/") + f"/send/{key}"
-    logger.info("API generated link %s for admin %s", link, admin_id)
-    return jsonify({"status":"success","generated_link":link})
-
-@app.route("/send/<key>", methods=["GET", "POST"])
-def send_page(key):
-    if key not in BOT_LINKS:
-        logger.warning("Invalid send key used: %s", key)
-        return "<h3 style='color:red;text-align:center'>Invalid or expired link ❌</h3>", 404
-
-    creds = BOT_LINKS[key]
-    message = None
-    if request.method == "POST":
-        msg1 = (request.form.get("msg1") or "").strip()
-        msg2 = (request.form.get("msg2") or "").strip()
-        logger.info("Send request for key=%s admin=%s", key, creds.get("admin"))
-        ok1 = False
-        ok2 = False
-        try:
-            ok1 = send_message_to_admin(creds["token"], creds["admin"], msg1)
-        except Exception as e:
-            logger.exception("Error sending msg1: %s", e)
-        try:
-            ok2 = send_message_to_admin(creds["token"], creds["admin"], msg2)
-        except Exception as e:
-            logger.exception("Error sending msg2: %s", e)
-
-        if ok1 and ok2:
-            message = "✅ Both messages sent successfully!"
-        elif ok1 or ok2:
-            message = "⚠️ One message sent; one failed."
+@app.route('/send/<link_id>')
+def send_messages(link_id):
+    """Message sending page"""
+    # Check if link exists and is not expired
+    if link_id not in generated_links:
+        return render_template('link_expired.html', message="This link does not exist!")
+    
+    link_data = generated_links[link_id]
+    
+    # Check if link is expired
+    expiration_time = datetime.fromisoformat(link_data['expiration_time'])
+    if datetime.now() > expiration_time:
+        return render_template('link_expired.html', message="This link has expired!")
+    
+    # Check if link was already used
+    if link_data['used']:
+        return render_template('link_expired.html', message="This link is Expired!")
+    
+    if request.method == 'POST':
+        message1 = request.form.get('message1', '').strip()
+        message2 = request.form.get('message2', '').strip()
+        
+        if not message1 and not message2:
+            flash('Please enter at least one message!', 'error')
+            return render_template('send_message.html', link_id=link_id, messages_sent=False)
+        
+        # Send messages via Telegram bot
+        bot = TelegramBot(link_data['bot_token'])
+        
+        combined_message = f"📨 <b>New Message Received</b>\n\n"
+        if message1:
+            combined_message += f"🔸 <b>Message 1:</b> {message1}\n\n"
+        if message2:
+            combined_message += f"🔹 <b>Message 2:</b> {message2}\n\n"
+        combined_message += f"⏰ <b>Sent at:</b> {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n"
+        combined_message += f"🤖 <b>Bot:</b> @{link_data.get('bot_username', 'Unknown')}"
+        
+        success = bot.send_message(link_data['admin_id'], combined_message)
+        
+        if success:
+            # Mark link as used
+            link_data['used'] = True
+            link_data['sent_at'] = datetime.now().isoformat()
+            link_data['sent_messages'] = [message1, message2]
+            
+            # Update admin data
+            for admin_id_key, data in admin_data.items():
+                for link_info in data.get('links', []):
+                    if link_info['link_id'] == link_id:
+                        link_info['used'] = True
+                        link_info['sent_at'] = datetime.now().isoformat()
+                        link_info['messages'] = [message1, message2]
+            
+            return render_template('message_sent.html')
         else:
-            message = "❌ Failed to send messages. Check bot token and admin id in logs."
+            flash('Failed to send messages. Please check your bot token and admin ID.', 'error')
+            return render_template('send_message.html', link_id=link_id, messages_sent=False)
+    
+    return render_template('send_message.html', link_id=link_id, messages_sent=False)
 
-    return render_template_string(SEND_HTML, message=message)
+@app.route('/api/link')
+def api_generate_link():
+    """API endpoint to generate link via GET request"""
+    try:
+        admin_id = request.args.get('admin_id', '').strip()
+        bot_token = request.args.get('token', '').strip()
+        
+        if not admin_id or not bot_token:
+            return jsonify({'error': 'admin_id and token parameters are required'}), 400
+        
+        # Validate bot token format
+        if not bot_token.startswith(('1234567890:')):
+            return jsonify({'error': 'Invalid bot token format'}), 400
+        
+        # Validate admin ID format
+        if not admin_id.isdigit():
+            return jsonify({'error': 'Admin ID must be numeric'}), 400
+        
+        # Test bot token
+        bot = TelegramBot(bot_token)
+        bot_info = bot.get_bot_info()
+        if not bot_info or not bot_info.get('ok'):
+            return jsonify({'error': 'Invalid bot token'}), 400
+        
+        # Generate unique link ID
+        link_id = str(uuid.uuid4()).replace('-', '').upper()[:8]
+        unique_link = f"/send/{link_id}"
+        
+        # Store link data with expiration (24 hours)
+        expiration_time = datetime.now() + timedelta(hours=24)
+        
+        generated_links[link_id] = {
+            'bot_token': bot_token,
+            'admin_id': admin_id,
+            'created_at': datetime.now().isoformat(),
+            'expiration_time': expiration_time.isoformat(),
+            'used': False,
+            'sent_messages': [],
+            'bot_username': bot_info.get('result', {}).get('username', 'Unknown')
+        }
+        
+        # Store in admin data
+        admin_data[admin_id] = admin_data.get(admin_id, {})
+        admin_data[admin_id]['links'] = admin_data[admin_id].get('links', [])
+        admin_data[admin_id]['links'].append({
+            'link_id': link_id,
+            'link_url': unique_link,
+            'created_at': datetime.now().isoformat(),
+            'used': False,
+            'bot_username': bot_info.get('result', {}).get('username', 'Unknown')
+        })
+        
+        # Store bot token for admin
+        if 'bot_tokens' not in admin_data[admin_id]:
+            admin_data[admin_id]['bot_tokens'] = []
+        if bot_token not in admin_data[admin_id]['bot_tokens']:
+            admin_data[admin_id]['bot_tokens'].append(bot_token)
+        
+        return jsonify({
+            'success': True,
+            'link_id': link_id,
+            'link_url': unique_link,
+            'expires_at': expiration_time.isoformat(),
+            'bot_username': bot_info.get('result', {}).get('username', 'Unknown')
+        })
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
-# A simple health check for Render and uptime monitors
-@app.route("/health")
-def health():
-    return jsonify({"status":"ok"}), 200
+@app.route('/admin')
+def admin_login():
+    """Admin login page"""
+    if 'admin_logged_in' in session and session['admin_logged_in']:
+        return redirect(url_for('admin_dashboard'))
+    return render_template('admin_login.html')
 
-# Friendly error handler to ensure 500s show logs in Render
-@app.errorhandler(Exception)
-def handle_exception(e):
-    logger.exception("Unhandled exception: %s", e)
-    return jsonify({"status":"error","message":"Internal server error"}), 500
+@app.route('/admin/login', methods=['POST'])
+def admin_login_submit():
+    """Admin login submission"""
+    username = request.form.get('username', '').strip()
+    password = request.form.get('password', '').strip()
+    
+    if username == 'mk' and password == 'mk123':
+        session['admin_logged_in'] = True
+        session['admin_username'] = username
+        return redirect(url_for('admin_dashboard'))
+    else:
+        flash('Invalid credentials!', 'error')
+        return redirect(url_for('admin_login'))
 
-if __name__ == "__main__":
-    # Render provides a PORT env var; fallback to 5000 locally
-    port = int(os.environ.get("PORT", 5000))
-    logger.info("Starting app on port %s", port)
-    app.run(host="0.0.0.0", port=port)
+@app.route('/admin/dashboard')
+def admin_dashboard():
+    """Admin dashboard to view all data"""
+    if 'admin_logged_in' not in session or not session['admin_logged_in']:
+        return redirect(url_for('admin_login'))
+    
+    # Calculate statistics
+    total_links = len([link for link in generated_links.values() if not link['used']])
+    total_used_links = len([link for link in generated_links.values() if link['used']])
+    total_messages = len([link for link in generated_links.values() if link['sent_messages']])
+    
+    stats = {
+        'total_links': total_links,
+        'total_used_links': total_used_links,
+        'total_messages': total_messages,
+        'active_admins': len(set(link['admin_id'] for link in generated_links.values()))
+    }
+    
+    return render_template('admin_dashboard.html', admin_data=admin_data, stats=stats)
+
+@app.route('/admin/logout')
+def admin_logout():
+    """Admin logout"""
+    session.clear()
+    flash('Logged out successfully!', 'success')
+    return redirect(url_for('home'))
+
+@app.route('/health')
+def health_check():
+    """Health check endpoint for Render"""
+    return jsonify({
+        'status': 'healthy',
+        'timestamp': datetime.now().isoformat(),
+        'active_links': len(generated_links),
+        'admin_count': len(admin_data)
+    })
+
+@app.route('/cleanup')
+def cleanup_expired_links():
+    """Clean up expired links"""
+    current_time = datetime.now()
+    expired_links = []
+    
+    for link_id, link_data in list(generated_links.items()):
+        expiration_time = datetime.fromisoformat(link_data['expiration_time'])
+        if current_time > expiration_time or link_data['used']:
+            expired_links.append(link_id)
+    
+    for link_id in expired_links:
+        del generated_links[link_id]
+    
+    return jsonify({
+        'cleaned': len(expired_links),
+        'remaining_active': len(generated_links),
+        'timestamp': datetime.now().isoformat()
+    })
+
+# Error handlers
+@app.errorhandler(404)
+def not_found(error):
+    return render_template('404.html'), 404
+
+@app.errorhandler(500)
+def internal_error(error):
+    return render_template('500.html'), 500
+
+# Production WSGI application
+application = app
+
+if __name__ == '__main__':
+    port = int(os.environ.get('PORT', 5000))
+    debug_mode = os.environ.get('DEBUG', 'False').lower() == 'true'
+    
+    app.run(
+        host='0.0.0.0',
+        port=port,
+        debug=debug_mode,
+        threaded=True
+    )
