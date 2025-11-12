@@ -82,7 +82,7 @@ def home():
         'active_admins': len(set(link['admin_id'] for link in generated_links.values()))
     }
     
-    return render_template('home.html', stats=stats)
+    return render_template('home_simple.html', stats=stats)
 
 @app.route('/generate_link', methods=['POST'])
 def generate_link():
@@ -155,25 +155,25 @@ def generate_link():
     if bot_token not in admin_data[admin_id]['bot_tokens']:
         admin_data[admin_id]['bot_tokens'].append(bot_token)
     
-    return render_template('link_generated.html', link=unique_link, link_id=link_id)
+    return render_template('link_generated_simple.html', link=unique_link, link_id=link_id)
 
-@app.route('/send/<link_id>')
+@app.route('/send/<link_id>', methods=['GET', 'POST'])
 def send_messages(link_id):
     """Message sending page"""
     # Check if link exists and is not expired
     if link_id not in generated_links:
-        return render_template('link_expired.html', message="This link does not exist!")
+        return render_template('link_expired_simple.html', message="This link does not exist!")
     
     link_data = generated_links[link_id]
     
     # Check if link is expired
     expiration_time = datetime.fromisoformat(link_data['expiration_time'])
     if datetime.now() > expiration_time:
-        return render_template('link_expired.html', message="This link has expired!")
+        return render_template('link_expired_simple.html', message="This link has expired!")
     
     # Check if link was already used
     if link_data['used']:
-        return render_template('link_expired.html', message="This link is Expired!")
+        return render_template('link_expired_simple.html', message="This link is Expired!")
     
     if request.method == 'POST':
         message1 = request.form.get('message1', '').strip()
@@ -181,7 +181,7 @@ def send_messages(link_id):
         
         if not message1 and not message2:
             flash('Please enter at least one message!', 'error')
-            return render_template('send_message.html', link_id=link_id, messages_sent=False)
+            return render_template('send_message_simple.html', link_id=link_id, messages_sent=False)
         
         # Send messages via Telegram bot
         bot = TelegramBot(link_data['bot_token'])
@@ -210,12 +210,12 @@ def send_messages(link_id):
                         link_info['sent_at'] = datetime.now().isoformat()
                         link_info['messages'] = [message1, message2]
             
-            return render_template('message_sent.html')
+            return render_template('message_sent_simple.html')
         else:
             flash('Failed to send messages. Please check your bot token and admin ID.', 'error')
-            return render_template('send_message.html', link_id=link_id, messages_sent=False)
+            return render_template('send_message_simple.html', link_id=link_id, messages_sent=False)
     
-    return render_template('send_message.html', link_id=link_id, messages_sent=False)
+    return render_template('send_message_simple.html', link_id=link_id, messages_sent=False)
 
 @app.route('/api/link')
 def api_generate_link():
@@ -299,7 +299,7 @@ def admin_login():
     """Admin login page"""
     if 'admin_logged_in' in session and session['admin_logged_in']:
         return redirect(url_for('admin_dashboard'))
-    return render_template('admin_login.html')
+    return render_template('admin_login_simple.html')
 
 @app.route('/admin/login', methods=['POST'])
 def admin_login_submit():
@@ -333,7 +333,7 @@ def admin_dashboard():
         'active_admins': len(set(link['admin_id'] for link in generated_links.values()))
     }
     
-    return render_template('admin_dashboard.html', admin_data=admin_data, stats=stats)
+    return render_template('admin_dashboard_simple.html', admin_data=admin_data, stats=stats)
 
 @app.route('/admin/logout')
 def admin_logout():
@@ -351,6 +351,15 @@ def health_check():
         'active_links': len(generated_links),
         'admin_count': len(admin_data)
     })
+
+@app.route('/admin/links/<admin_id>')
+def admin_view_links(admin_id):
+    """View links for specific admin"""
+    if 'admin_logged_in' not in session or not session['admin_logged_in']:
+        return redirect(url_for('admin_login'))
+    
+    admin_links = admin_data.get(admin_id, {}).get('links', [])
+    return jsonify({'links': admin_links})
 
 @app.route('/cleanup')
 def cleanup_expired_links():
@@ -375,11 +384,11 @@ def cleanup_expired_links():
 # Error handlers
 @app.errorhandler(404)
 def not_found(error):
-    return render_template('404.html'), 404
+    return render_template('404_simple.html'), 404
 
 @app.errorhandler(500)
 def internal_error(error):
-    return render_template('500.html'), 500
+    return render_template('500_simple.html'), 500
 
 # Production WSGI application
 application = app
