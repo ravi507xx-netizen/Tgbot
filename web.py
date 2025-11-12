@@ -318,22 +318,50 @@ def admin_login_submit():
 @app.route('/admin/dashboard')
 def admin_dashboard():
     """Admin dashboard to view all data"""
-    if 'admin_logged_in' not in session or not session['admin_logged_in']:
-        return redirect(url_for('admin_login'))
-    
-    # Calculate statistics
-    total_links = len([link for link in generated_links.values() if not link['used']])
-    total_used_links = len([link for link in generated_links.values() if link['used']])
-    total_messages = len([link for link in generated_links.values() if link['sent_messages']])
-    
-    stats = {
-        'total_links': total_links,
-        'total_used_links': total_used_links,
-        'total_messages': total_messages,
-        'active_admins': len(set(link['admin_id'] for link in generated_links.values()))
-    }
-    
-    return render_template('admin_dashboard_simple.html', admin_data=admin_data, stats=stats)
+    try:
+        if 'admin_logged_in' not in session or not session['admin_logged_in']:
+            return redirect(url_for('admin_login'))
+        
+        # Calculate statistics with error handling
+        try:
+            total_links = len([link for link in generated_links.values() if not link.get('used', False)])
+            total_used_links = len([link for link in generated_links.values() if link.get('used', False)])
+            total_messages = len([link for link in generated_links.values() if link.get('sent_messages', [])])
+            
+            stats = {
+                'total_links': total_links,
+                'total_used_links': total_used_links,
+                'total_messages': total_messages,
+                'active_admins': len(set(link['admin_id'] for link in generated_links.values() if link.get('admin_id')))
+            }
+        except Exception as stats_error:
+            print(f"Stats calculation error: {stats_error}")
+            stats = {
+                'total_links': 0,
+                'total_used_links': 0,
+                'total_messages': 0,
+                'active_admins': 0
+            }
+        
+        # Ensure admin_data is properly structured
+        safe_admin_data = {}
+        try:
+            for admin_id, data in admin_data.items():
+                if isinstance(data, dict) and 'links' in data:
+                    safe_admin_data[admin_id] = data
+                else:
+                    safe_admin_data[admin_id] = {'links': []}
+        except Exception as data_error:
+            print(f"Data processing error: {data_error}")
+            safe_admin_data = {}
+        
+        return render_template('admin_dashboard_enhanced.html', 
+                             admin_data=safe_admin_data, 
+                             stats=stats)
+    except Exception as e:
+        print(f"Dashboard error: {e}")
+        flash('Error loading dashboard data. Please try again.', 'error')
+        return redirect(url_for('home'))
 
 @app.route('/admin/logout')
 def admin_logout():
@@ -368,17 +396,66 @@ def cleanup_expired_links():
     expired_links = []
     
     for link_id, link_data in list(generated_links.items()):
-        expiration_time = datetime.fromisoformat(link_data['expiration_time'])
-        if current_time > expiration_time or link_data['used']:
+        try:
+            if link_data.get('expiration_time'):
+                expiration_time = datetime.fromisoformat(link_data['expiration_time'])
+                if current_time > expiration_time or link_data.get('used', False):
+                    expired_links.append(link_id)
+            else:
+                # If no expiration time, treat as expired
+                expired_links.append(link_id)
+        except Exception as e:
+            print(f"Error checking expiration for {link_id}: {e}")
             expired_links.append(link_id)
     
     for link_id in expired_links:
-        del generated_links[link_id]
+        if link_id in generated_links:
+            del generated_links[link_id]
     
     return jsonify({
         'cleaned': len(expired_links),
         'remaining_active': len(generated_links),
         'timestamp': datetime.now().isoformat()
+    })
+
+@app.route('/debug/sample')
+def debug_sample_data():
+    """Create sample data for testing (GET only, for development)"""
+    if request.method != 'GET':
+        return 'Method Not Allowed', 405
+    
+    # Create sample data for testing
+    sample_link_id = "TESTLINK123"
+    sample_admin_id = "123456789"
+    
+    # Create sample link data
+    generated_links[sample_link_id] = {
+        'bot_token': '1234567890:ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefg',
+        'admin_id': sample_admin_id,
+        'created_at': datetime.now().isoformat(),
+        'expiration_time': (datetime.now() + timedelta(hours=24)).isoformat(),
+        'used': False,
+        'sent_messages': [],
+        'bot_username': 'TestBot'
+    }
+    
+    # Create sample admin data
+    admin_data[sample_admin_id] = {
+        'links': [{
+            'link_id': sample_link_id,
+            'link_url': f'/send/{sample_link_id}',
+            'created_at': datetime.now().isoformat(),
+            'used': False,
+            'bot_username': 'TestBot'
+        }],
+        'bot_tokens': ['1234567890:ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefg']
+    }
+    
+    return jsonify({
+        'success': True,
+        'message': 'Sample data created',
+        'link_id': sample_link_id,
+        'link_url': f'/send/{sample_link_id}'
     })
 
 # Error handlers
