@@ -1,0 +1,486 @@
+{% extends "base_simple.html" %}
+
+{% block title %}Admin Dashboard{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h2 class="mb-0">
+                                <i class="fas fa-tachometer-alt me-2"></i>
+                                Admin Dashboard
+                            </h2>
+                            <p class="text-muted mt-2 mb-0">
+                                {% if session.admin_username %}
+                                    Welcome back, {{ session.admin_username }}
+                                {% else %}
+                                    Welcome to Admin Dashboard
+                                {% endif %}
+                                | Manage your message links and monitor activity
+                            </p>
+                        </div>
+                        <div class="text-end">
+                            <small class="text-muted">
+                                <i class="fas fa-clock me-1"></i>
+                                Last Updated: {{ moment().format('YYYY-MM-DD HH:mm:ss') if moment else 'Now' }}
+                            </small>
+                            <br>
+                            <a href="{{ url_for('admin_logout') }}" class="btn btn-outline-danger btn-sm mt-2">
+                                <i class="fas fa-sign-out-alt me-1"></i> Logout
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistics Overview -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body text-center">
+                    <i class="fas fa-link text-primary" style="font-size: 2rem;"></i>
+                    <h3 class="mt-2 text-primary">{{ stats.total_links }}</h3>
+                    <p class="text-muted mb-2">Active Links</p>
+                    <small class="text-success">
+                        <i class="fas fa-arrow-up me-1"></i>0 new today
+                    </small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body text-center">
+                    <i class="fas fa-check-circle text-success" style="font-size: 2rem;"></i>
+                    <h3 class="mt-2 text-success">{{ stats.total_used_links }}</h3>
+                    <p class="text-muted mb-2">Used Links</p>
+                    <small class="text-info">
+                        <i class="fas fa-chart-line me-1"></i>100% success rate
+                    </small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body text-center">
+                    <i class="fas fa-paper-plane text-warning" style="font-size: 2rem;"></i>
+                    <h3 class="mt-2 text-warning">{{ stats.total_messages }}</h3>
+                    <p class="text-muted mb-2">Messages Sent</p>
+                    <small class="text-primary">
+                        <i class="fas fa-envelope me-1"></i>All delivered
+                    </small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body text-center">
+                    <i class="fas fa-users text-info" style="font-size: 2rem;"></i>
+                    <h3 class="mt-2 text-info">{{ stats.active_admins }}</h3>
+                    <p class="text-muted mb-2">Active Admins</p>
+                    <small class="text-success">
+                        <i class="fas fa-user-check me-1"></i>Online
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Detailed Activity Table -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fas fa-table me-2"></i>
+                        Detailed Activity Log
+                    </h5>
+                    <div>
+                        <button class="btn btn-sm btn-outline-primary" onclick="refreshData()">
+                            <i class="fas fa-sync-alt me-1"></i> Refresh
+                        </button>
+                        <button class="btn btn-sm btn-outline-success" onclick="exportData()">
+                            <i class="fas fa-download me-1"></i> Export
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    {% if admin_data %}
+                        <div class="table-responsive">
+                            <table class="table table-hover" id="activityTable">
+                                <thead>
+                                    <tr>
+                                        <th>
+                                            <i class="fas fa-hashtag me-1"></i>Link ID
+                                        </th>
+                                        <th>
+                                            <i class="fas fa-user-shield me-1"></i>Admin ID
+                                        </th>
+                                        <th>
+                                            <i class="fas fa-robot me-1"></i>Bot Info
+                                        </th>
+                                        <th>
+                                            <i class="fas fa-calendar me-1"></i>Created
+                                        </th>
+                                        <th>
+                                            <i class="fas fa-clock me-1"></i>Expires
+                                        </th>
+                                        <th>
+                                            <i class="fas fa-toggle-on me-1"></i>Status
+                                        </th>
+                                        <th>
+                                            <i class="fas fa-paper-plane me-1"></i>Sent At
+                                        </th>
+                                        <th>
+                                            <i class="fas fa-comments me-1"></i>Messages
+                                        </th>
+                                        <th>
+                                            <i class="fas fa-cogs me-1"></i>Actions
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for admin_id, data in admin_data.items() %}
+                                        {% for link in data.links %}
+                                        <tr>
+                                            <td>
+                                                <code class="badge bg-light text-dark">{{ link.link_id }}</code>
+                                            </td>
+                                            <td>
+                                                <code>{{ admin_id }}</code>
+                                            </td>
+                                            <td>
+                                                {% if link.bot_username %}
+                                                    <span class="badge bg-primary">@{{ link.bot_username }}</span>
+                                                {% else %}
+                                                    <span class="text-muted">Unknown</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                <small>{{ link.created_at[:19] if link.created_at else 'N/A' }}</small>
+                                            </td>
+                                            <td>
+                                                {% set expiration_time = link.created_at[:19] if link.created_at else None %}
+                                                {% if expiration_time %}
+                                                    {% set expiry = moment().from_iso_format(expiration_time).add(hours=24) %}
+                                                    <small class="{% if moment().after(expiry) %}text-danger{% else %}text-success{% endif %}">
+                                                        {{ expiry.format('YYYY-MM-DD HH:mm') }}
+                                                    </small>
+                                                {% else %}
+                                                    <small class="text-muted">Unknown</small>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if link.used %}
+                                                    <span class="badge bg-success">
+                                                        <i class="fas fa-check me-1"></i>Used
+                                                    </span>
+                                                {% else %}
+                                                    <span class="badge bg-warning">
+                                                        <i class="fas fa-clock me-1"></i>Active
+                                                    </span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if link.sent_at %}
+                                                    <small class="text-success">{{ link.sent_at[:19] }}</small>
+                                                {% else %}
+                                                    <span class="text-muted">Not sent</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if link.messages %}
+                                                    <small>
+                                                        <i class="fas fa-eye text-info me-1"></i>
+                                                        {{ link.messages|length }} message(s)
+                                                    </small>
+                                                {% else %}
+                                                    <span class="text-muted">None</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                <div class="btn-group btn-group-sm">
+                                                    <button class="btn btn-outline-primary btn-sm" 
+                                                            onclick="viewLinkDetails('{{ link.link_id }}')"
+                                                            title="View Details">
+                                                        <i class="fas fa-eye"></i>
+                                                    </button>
+                                                    {% if not link.used %}
+                                                    <button class="btn btn-outline-warning btn-sm" 
+                                                            onclick="copyLink('{{ link.link_id }}')"
+                                                            title="Copy Link">
+                                                        <i class="fas fa-copy"></i>
+                                                    </button>
+                                                    {% endif %}
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-inbox text-muted" style="font-size: 4rem;"></i>
+                            <h5 class="text-muted mt-3">No Activity Data</h5>
+                            <p class="text-muted">No message links have been generated yet.</p>
+                            <a href="{{ url_for('home') }}" class="btn btn-primary">
+                                <i class="fas fa-plus me-1"></i> Generate First Link
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- System Information -->
+    <div class="row mt-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="fas fa-server me-2"></i>
+                        System Information
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-6">
+                            <small class="text-muted">Server Status</small>
+                            <div class="d-flex align-items-center mt-1">
+                                <span class="badge bg-success">Online</span>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <small class="text-muted">Uptime</small>
+                            <div class="d-flex align-items-center mt-1">
+                                <span class="text-success">Excellent</span>
+                            </div>
+                        </div>
+                    </div>
+                    <hr>
+                    <div class="row">
+                        <div class="col-6">
+                            <small class="text-muted">Active Links</small>
+                            <div class="d-flex align-items-center mt-1">
+                                <strong>{{ stats.total_links }}</strong>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <small class="text-muted">Memory Usage</small>
+                            <div class="d-flex align-items-center mt-1">
+                                <small>Optimized</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="fas fa-chart-pie me-2"></i>
+                        Performance Metrics
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-6">
+                            <small class="text-muted">Success Rate</small>
+                            <div class="d-flex align-items-center mt-1">
+                                <div class="progress w-100" style="height: 6px;">
+                                    <div class="progress-bar bg-success" style="width: 100%"></div>
+                                </div>
+                                <small class="ms-2">100%</small>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <small class="text-muted">Avg Response</small>
+                            <div class="d-flex align-items-center mt-1">
+                                <div class="progress w-100" style="height: 6px;">
+                                    <div class="progress-bar bg-primary" style="width: 95%"></div>
+                                </div>
+                                <small class="ms-2">Fast</small>
+                            </div>
+                        </div>
+                    </div>
+                    <hr>
+                    <div class="row">
+                        <div class="col-6">
+                            <small class="text-muted">Daily Usage</small>
+                            <div class="d-flex align-items-center mt-1">
+                                <small>{{ moment().format('YYYY-MM-DD') }}</small>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <small class="text-muted">Peak Time</small>
+                            <div class="d-flex align-items-center mt-1">
+                                <small>Realtime</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Link Details Modal -->
+<div class="modal fade" id="linkDetailsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-info-circle me-2"></i>
+                    Link Details
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="linkDetailsContent">
+                    <!-- Content will be loaded dynamically -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Utility functions
+function refreshData() {
+    location.reload();
+}
+
+function exportData() {
+    const data = JSON.stringify({{ admin_data|tojson }});
+    const blob = new Blob([data], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'admin_data_' + new Date().toISOString().split('T')[0] + '.json';
+    a.click();
+}
+
+function viewLinkDetails(linkId) {
+    // Find the link data
+    const adminData = {{ admin_data|tojson|safe }};
+    let linkDetails = null;
+    
+    for (let adminId in adminData) {
+        const links = adminData[adminId].links || [];
+        for (let link of links) {
+            if (link.link_id === linkId) {
+                linkDetails = link;
+                linkDetails.admin_id = adminId;
+                break;
+            }
+        }
+        if (linkDetails) break;
+    }
+    
+    if (linkDetails) {
+        showLinkDetailsModal(linkDetails);
+    } else {
+        alert('Link details not found');
+    }
+}
+
+function showLinkDetailsModal(linkDetails) {
+    const content = `
+        <div class="row">
+            <div class="col-md-6">
+                <h6><i class="fas fa-info-circle me-2"></i>Basic Information</h6>
+                <table class="table table-sm">
+                    <tr><td><strong>Link ID:</strong></td><td><code>${linkDetails.link_id}</code></td></tr>
+                    <tr><td><strong>Admin ID:</strong></td><td><code>${linkDetails.admin_id}</code></td></tr>
+                    <tr><td><strong>Bot Username:</strong></td><td>@${linkDetails.bot_username || 'Unknown'}</td></tr>
+                    <tr><td><strong>Status:</strong></td><td>${linkDetails.used ? '<span class="badge bg-success">Used</span>' : '<span class="badge bg-warning">Active</span>'}</td></tr>
+                </table>
+            </div>
+            <div class="col-md-6">
+                <h6><i class="fas fa-clock me-2"></i>Timeline</h6>
+                <table class="table table-sm">
+                    <tr><td><strong>Created:</strong></td><td>${linkDetails.created_at || 'N/A'}</td></tr>
+                    ${linkDetails.sent_at ? `<tr><td><strong>Sent:</strong></td><td>${linkDetails.sent_at}</td></tr>` : ''}
+                    <tr><td><strong>Expires:</strong></td><td>${calculateExpiry(linkDetails.created_at)}</td></tr>
+                </table>
+            </div>
+        </div>
+        ${linkDetails.messages ? `
+        <div class="mt-3">
+            <h6><i class="fas fa-comments me-2"></i>Messages Sent</h6>
+            <div class="bg-light p-3 rounded">
+                ${linkDetails.messages.map((msg, index) => `
+                    <div class="mb-2">
+                        <strong>Message ${index + 1}:</strong><br>
+                        <small class="text-muted">${msg || 'No content'}</small>
+                    </div>
+                `).join('')}
+            </div>
+        </div>
+        ` : ''}
+    `;
+    
+    document.getElementById('linkDetailsContent').innerHTML = content;
+    new bootstrap.Modal(document.getElementById('linkDetailsModal')).show();
+}
+
+function calculateExpiry(createdAt) {
+    if (!createdAt) return 'N/A';
+    try {
+        const created = new Date(createdAt);
+        const expiry = new Date(created.getTime() + (24 * 60 * 60 * 1000));
+        const now = new Date();
+        
+        if (now > expiry) {
+            return `<span class="text-danger">Expired</span>`;
+        } else {
+            const remaining = Math.ceil((expiry - now) / (1000 * 60 * 60));
+            return `<span class="text-success">${remaining}h remaining</span>`;
+        }
+    } catch (e) {
+        return 'Invalid Date';
+    }
+}
+
+function copyLink(linkId) {
+    const fullUrl = window.location.origin + '/send/' + linkId;
+    navigator.clipboard.writeText(fullUrl).then(function() {
+        // Show success message
+        const btn = event.target.closest('button');
+        const originalContent = btn.innerHTML;
+        btn.innerHTML = '<i class="fas fa-check"></i>';
+        btn.classList.add('btn-success');
+        
+        setTimeout(function() {
+            btn.innerHTML = originalContent;
+            btn.classList.remove('btn-success');
+        }, 2000);
+    });
+}
+
+// Auto-refresh every 30 seconds
+setInterval(function() {
+    // Update timestamps
+    document.querySelectorAll('[data-timestamp]').forEach(function(element) {
+        // Update time display
+    });
+}, 30000);
+
+// Initialize page
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('Admin dashboard initialized');
+});
+</script>
+{% endblock %}

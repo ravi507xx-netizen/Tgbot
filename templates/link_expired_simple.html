@@ -1,0 +1,43 @@
+{% extends "base_simple.html" %}
+
+{% block title %}Link Expired{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header bg-warning">
+                    <h4 class="mb-0 text-center">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        Link Not Available
+                    </h4>
+                </div>
+                <div class="card-body text-center">
+                    <i class="fas fa-ban text-warning" style="font-size: 4rem;"></i>
+                    
+                    <h5 class="mt-4 mb-3">This link is no longer available</h5>
+                    
+                    <p class="text-muted">{{ message }}</p>
+                    
+                    <div class="alert alert-warning mt-4">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>Possible reasons:</strong>
+                        <ul class="text-start mb-0 mt-2">
+                            <li>The link has expired (24-hour time limit)</li>
+                            <li>The link has already been used once</li>
+                            <li>The link ID is incorrect or doesn't exist</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="mt-4">
+                        <a href="{{ url_for('home') }}" class="btn btn-primary">
+                            <i class="fas fa-home me-1"></i> Generate New Link
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

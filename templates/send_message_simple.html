@@ -1,0 +1,111 @@
+{% extends "base_simple.html" %}
+
+{% block title %}Send Message{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="mb-0">
+                        <i class="fas fa-paper-plane me-2"></i>
+                        Send Message
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>Secure Message Submission</strong><br>
+                        Fill out the form below to send your message. The message will be delivered securely via Telegram.
+                    </div>
+                    
+                    <form method="POST" id="messageForm">
+                        <div class="mb-3">
+                            <label for="message1" class="form-label">
+                                <i class="fas fa-comment me-1"></i>
+                                Message 1
+                            </label>
+                            <textarea class="form-control" 
+                                      id="message1" 
+                                      name="message1" 
+                                      rows="4" 
+                                      placeholder="Enter your message here..."
+                                      maxlength="1000"
+                                      required></textarea>
+                            <div class="form-text">
+                                <span id="charCount1">0</span>/1000 characters
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="message2" class="form-label">
+                                <i class="fas fa-comment me-1"></i>
+                                Message 2 (Optional)
+                            </label>
+                            <textarea class="form-control" 
+                                      id="message2" 
+                                      name="message2" 
+                                      rows="4" 
+                                      placeholder="Enter your second message here (optional)..."
+                                      maxlength="1000"></textarea>
+                            <div class="form-text">
+                                <span id="charCount2">0</span>/1000 characters
+                            </div>
+                        </div>
+                        
+                        <div class="alert alert-warning">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            <strong>Important:</strong> This link can only be used once. After sending, it will be permanently deactivated.
+                        </div>
+                        
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary btn-lg" id="sendBtn">
+                                <i class="fas fa-paper-plane me-2"></i>
+                                Send Messages
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Character counting
+function updateCharacterCount() {
+    const message1 = document.getElementById('message1').value;
+    const message2 = document.getElementById('message2').value;
+    
+    document.getElementById('charCount1').textContent = message1.length;
+    document.getElementById('charCount2').textContent = message2.length;
+}
+
+// Add event listeners
+document.getElementById('message1').addEventListener('input', updateCharacterCount);
+document.getElementById('message2').addEventListener('input', updateCharacterCount);
+
+// Form submission
+document.getElementById('messageForm').addEventListener('submit', function(e) {
+    const message1 = document.getElementById('message1').value.trim();
+    const message2 = document.getElementById('message2').value.trim();
+    
+    if (!message1 && !message2) {
+        e.preventDefault();
+        alert('Please enter at least one message before submitting.');
+        return;
+    }
+    
+    // Show loading state
+    const sendBtn = document.getElementById('sendBtn');
+    sendBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Sending Messages...';
+    sendBtn.disabled = true;
+});
+
+// Initialize
+updateCharacterCount();
+</script>
+{% endblock %}

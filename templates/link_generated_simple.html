@@ -1,0 +1,82 @@
+{% extends "base_simple.html" %}
+
+{% block title %}Link Generated{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h4 class="mb-0 text-center">
+                        <i class="fas fa-check-circle me-2"></i>
+                        Link Generated Successfully!
+                    </h4>
+                </div>
+                <div class="card-body text-center">
+                    <i class="fas fa-magic text-success" style="font-size: 4rem;"></i>
+                    
+                    <h5 class="mt-4 mb-3">Your secure message link is ready!</h5>
+                    
+                    <p class="text-muted">
+                        Share this link with anyone who needs to send you messages via Telegram.
+                        The link is one-time use only and will expire in 24 hours.
+                    </p>
+                    
+                    <div class="link-box mt-4">
+                        <h6 class="mb-3">Your Generated Link:</h6>
+                        <div class="link-text">{{ link }}</div>
+                        <button class="btn btn-primary copy-btn" onclick="copyLink('{{ link }}')">
+                            <i class="fas fa-copy me-1"></i> Copy Link
+                        </button>
+                    </div>
+                    
+                    <div class="mt-4">
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i>
+                            <strong>Instructions:</strong>
+                            <ul class="text-start mb-0 mt-2">
+                                <li>Copy the link above</li>
+                                <li>Share it with anyone who needs to send you messages</li>
+                                <li>Each recipient can use the link only once</li>
+                                <li>Messages will be sent directly to your Telegram account</li>
+                                <li>Link expires in 24 hours or after first use</li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-4">
+                        <a href="{{ url_for('home') }}" class="btn btn-outline-primary me-2">
+                            <i class="fas fa-home me-1"></i> Generate Another
+                        </a>
+                        <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline-success">
+                            <i class="fas fa-chart-bar me-1"></i> View Dashboard
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function copyLink(link) {
+    navigator.clipboard.writeText(window.location.origin + link).then(function() {
+        // Show success message
+        const btn = document.querySelector('.copy-btn');
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '<i class="fas fa-check me-1"></i> Copied!';
+        btn.classList.remove('btn-primary');
+        btn.classList.add('btn-success');
+        
+        setTimeout(function() {
+            btn.innerHTML = originalText;
+            btn.classList.remove('btn-success');
+            btn.classList.add('btn-primary');
+        }, 2000);
+    });
+}
+</script>
+{% endblock %}

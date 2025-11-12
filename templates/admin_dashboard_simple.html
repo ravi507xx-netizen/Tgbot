@@ -14,7 +14,12 @@
                         Admin Dashboard
                     </h2>
                     <p class="text-muted mt-2 mb-0">
-                        Welcome back, {{ session.admin_username }} | Manage your message links and monitor activity
+                        {% if session.admin_username %}
+                            Welcome back, {{ session.admin_username }}
+                        {% else %}
+                            Welcome to Admin Dashboard
+                        {% endif %}
+                        | Manage your message links and monitor activity
                     </p>
                 </div>
             </div>
