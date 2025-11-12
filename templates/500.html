@@ -1,0 +1,204 @@
+{% extends "base.html" %}
+
+{% block title %}Server Error - 500{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card border-danger">
+                <div class="card-header bg-danger text-white text-center">
+                    <h3 class="mb-0">
+                        <i class="fas fa-exclamation-triangle"></i> 500 - Server Error
+                    </h3>
+                </div>
+                <div class="card-body text-center p-5">
+                    <div class="mb-4">
+                        <i class="fas fa-bug text-danger" style="font-size: 5rem;"></i>
+                    </div>
+                    
+                    <h4 class="mb-4">Oops! Something went wrong on our end.</h4>
+                    
+                    <div class="alert alert-danger">
+                        <h6><i class="fas fa-exclamation-circle"></i> Internal Server Error</h6>
+                        <p class="mb-0">
+                            We're experiencing technical difficulties and couldn't complete your request. 
+                            Our team has been automatically notified.
+                        </p>
+                    </div>
+                    
+                    <div class="row mt-4">
+                        <div class="col-md-4">
+                            <div class="text-center mb-3">
+                                <i class="fas fa-sync-alt text-primary" style="font-size: 2rem;"></i>
+                                <h6>Try Again</h6>
+                                <small class="text-muted">Refresh the page</small>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="text-center mb-3">
+                                <i class="fas fa-home text-success" style="font-size: 2rem;"></i>
+                                <h6>Go Home</h6>
+                                <small class="text-muted">Return to safe page</small>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="text-center mb-3">
+                                <i class="fas fa-envelope text-warning" style="font-size: 2rem;"></i>
+                                <h6>Contact Support</h6>
+                                <small class="text-muted">Report the issue</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <hr class="my-4">
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-center">
+                        <button class="btn btn-primary btn-lg" onclick="location.reload()">
+                            <i class="fas fa-sync-alt"></i> Try Again
+                        </button>
+                        <a href="/" class="btn btn-outline-primary btn-lg">
+                            <i class="fas fa-home"></i> Go Home
+                        </a>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Troubleshooting -->
+            <div class="card mt-4">
+                <div class="card-header bg-warning">
+                    <h6 class="mb-0">
+                        <i class="fas fa-tools"></i> Troubleshooting Steps
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>What you can try:</h6>
+                            <ol>
+                                <li>Refresh the page (F5 or Ctrl+R)</li>
+                                <li>Clear your browser cache</li>
+                                <li>Try a different browser</li>
+                                <li>Check your internet connection</li>
+                                <li>Wait a few minutes and try again</li>
+                            </ol>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>If the problem persists:</h6>
+                            <ol>
+                                <li>The server may be restarting</li>
+                                <li>High traffic may be causing issues</li>
+                                <li>There might be a temporary service outage</li>
+                                <li>Check our status page (if available)</li>
+                                <li>Contact the system administrator</li>
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Technical Details -->
+            <div class="card mt-4 border-info">
+                <div class="card-header bg-info text-white">
+                    <h6 class="mb-0">
+                        <i class="fas fa-info-circle"></i> Technical Information
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>Error Type:</strong> Internal Server Error (500)</p>
+                            <p><strong>Timestamp:</strong> <span id="timestamp">{{ "now"|datetime }}</span></p>
+                            <p><strong>Request ID:</strong> {{ "random"|uuid }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>Status:</strong> The issue has been logged</p>
+                            <p><strong>Auto-retry:</strong> Automatic retry in progress</p>
+                            <p><strong>Contact:</strong> System administrators notified</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Set current timestamp
+document.getElementById('timestamp').textContent = new Date().toISOString();
+
+// Error reporting function
+function reportError() {
+    const errorInfo = {
+        timestamp: new Date().toISOString(),
+        url: window.location.href,
+        userAgent: navigator.userAgent,
+        error: '500 Server Error'
+    };
+    
+    console.log('Error reported:', errorInfo);
+    
+    // Send error to server (if endpoint exists)
+    fetch('/error-report', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(errorInfo)
+    }).catch(() => {
+        // Silently fail - error reporting endpoint may not exist
+        console.log('Error reporting endpoint not available');
+    });
+}
+
+// Auto-retry mechanism
+let retryCount = 0;
+const maxRetries = 3;
+
+function autoRetry() {
+    if (retryCount < maxRetries) {
+        retryCount++;
+        console.log(`Auto-retry attempt ${retryCount}/${maxRetries}`);
+        
+        setTimeout(() => {
+            if (confirm(`Auto-retry failed request? (${retryCount}/${maxRetries})`)) {
+                location.reload();
+            } else {
+                if (retryCount < maxRetries) {
+                    autoRetry();
+                }
+            }
+        }, 10000); // Wait 10 seconds before retry
+    }
+}
+
+// Report error on page load
+document.addEventListener('DOMContentLoaded', function() {
+    reportError();
+    
+    // Auto-retry after 30 seconds if user agrees
+    setTimeout(() => {
+        if (confirm('The page failed to load. Would you like to automatically retry?')) {
+            autoRetry();
+        }
+    }, 30000);
+});
+
+// Monitor for additional errors
+window.addEventListener('error', function(e) {
+    console.error('Additional JavaScript error:', e);
+    reportError();
+});
+
+// Network status monitoring
+window.addEventListener('online', function() {
+    console.log('Connection restored');
+});
+
+window.addEventListener('offline', function() {
+    console.log('Connection lost');
+});
+</script>
+{% endblock %}

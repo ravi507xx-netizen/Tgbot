@@ -1,0 +1,187 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Login{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-6">
+            <div class="card">
+                <div class="card-header bg-dark text-white text-center">
+                    <h3 class="mb-0">
+                        <i class="fas fa-user-shield"></i> Admin Login
+                    </h3>
+                </div>
+                <div class="card-body p-4">
+                    <div class="text-center mb-4">
+                        <i class="fas fa-lock text-dark" style="font-size: 4rem;"></i>
+                        <p class="text-muted mt-3">
+                            Please enter your admin credentials to access the dashboard.
+                        </p>
+                    </div>
+                    
+                    <form method="POST" action="/admin/login" id="adminForm">
+                        <div class="mb-4">
+                            <label for="username" class="form-label fw-bold">
+                                <i class="fas fa-user text-primary"></i> Username
+                            </label>
+                            <input type="text" 
+                                   class="form-control" 
+                                   id="username" 
+                                   name="username" 
+                                   placeholder="Enter username"
+                                   required 
+                                   autofocus>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label for="password" class="form-label fw-bold">
+                                <i class="fas fa-key text-success"></i> Password
+                            </label>
+                            <div class="input-group">
+                                <input type="password" 
+                                       class="form-control" 
+                                       id="password" 
+                                       name="password" 
+                                       placeholder="Enter password"
+                                       required>
+                                <button class="btn btn-outline-secondary" 
+                                        type="button" 
+                                        id="togglePassword">
+                                    <i class="fas fa-eye" id="eyeIcon"></i>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-4 form-check">
+                            <input type="checkbox" class="form-check-input" id="rememberMe">
+                            <label class="form-check-label" for="rememberMe">
+                                Remember me for this session
+                            </label>
+                        </div>
+                        
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary btn-lg" id="loginBtn">
+                                <i class="fas fa-sign-in-alt"></i> Login
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- Default Credentials Info -->
+            <div class="card mt-4 border-info">
+                <div class="card-header bg-info text-white">
+                    <h6 class="mb-0">
+                        <i class="fas fa-info-circle"></i> Default Credentials
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p class="mb-2"><strong>Username:</strong> mk</p>
+                            <p class="mb-0"><strong>Password:</strong> mk123</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p class="mb-0 text-muted">
+                                <i class="fas fa-shield-alt"></i> 
+                                Credentials should be changed in production
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Security Notice -->
+            <div class="card mt-4 border-warning">
+                <div class="card-header bg-warning">
+                    <h6 class="mb-0">
+                        <i class="fas fa-exclamation-triangle"></i> Security Notice
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <ul class="mb-0">
+                        <li>Session expires after 30 minutes of inactivity</li>
+                        <li>All activities are logged for security purposes</li>
+                        <li>Change default credentials in production</li>
+                        <li>Use strong, unique passwords</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Toggle password visibility
+document.getElementById('togglePassword').addEventListener('click', function() {
+    const password = document.getElementById('password');
+    const eyeIcon = document.getElementById('eyeIcon');
+    
+    if (password.type === 'password') {
+        password.type = 'text';
+        eyeIcon.className = 'fas fa-eye-slash';
+    } else {
+        password.type = 'password';
+        eyeIcon.className = 'fas fa-eye';
+    }
+});
+
+// Form submission
+document.getElementById('adminForm').addEventListener('submit', function(e) {
+    const loginBtn = document.getElementById('loginBtn');
+    
+    // Show loading state
+    loginBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Authenticating...';
+    loginBtn.disabled = true;
+});
+
+// Auto-fill demo credentials
+document.addEventListener('DOMContentLoaded', function() {
+    // Auto-fill default credentials for demo purposes
+    const username = document.getElementById('username');
+    const password = document.getElementById('password');
+    
+    // Focus on username field
+    if (!username.value) {
+        username.focus();
+    }
+    
+    // Add helpful placeholder text
+    username.placeholder = 'Username: mk';
+    password.placeholder = 'Password: mk123';
+});
+
+// Session timeout warning
+let sessionTimeout;
+let warningTimeout;
+
+function resetSessionTimer() {
+    clearTimeout(sessionTimeout);
+    clearTimeout(warningTimeout);
+    
+    // Show warning at 25 minutes
+    warningTimeout = setTimeout(() => {
+        if (confirm('Your session will expire in 5 minutes. Do you want to extend it?')) {
+            resetSessionTimer();
+        }
+    }, 25 * 60 * 1000); // 25 minutes
+    
+    // Auto-logout at 30 minutes
+    sessionTimeout = setTimeout(() => {
+        alert('Your session has expired. You will be redirected to login.');
+        window.location.href = '/admin';
+    }, 30 * 60 * 1000); // 30 minutes
+}
+
+// Start session timer
+resetSessionTimer();
+
+// Reset timer on user activity
+['click', 'keypress', 'scroll', 'mousemove'].forEach(event => {
+    document.addEventListener(event, resetSessionTimer, { passive: true });
+});
+</script>
+{% endblock %}

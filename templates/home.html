@@ -1,0 +1,240 @@
+{% extends "base.html" %}
+
+{% block title %}Generate Telegram Message Links{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<div class="hero-section">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-8 mx-auto text-center">
+                <h1 class="display-4 fw-bold mb-4">
+                    <i class="fab fa-telegram"></i> Telegram Message Link Generator
+                </h1>
+                <p class="lead mb-4">
+                    Generate unique links that allow anyone to send messages to your Telegram bot. 
+                    Perfect for contact forms, feedback collection, and secure messaging.
+                </p>
+                <div class="row mt-5">
+                    <div class="col-md-4">
+                        <div class="stats-card text-white">
+                            <i class="fas fa-link fa-2x mb-3"></i>
+                            <h4>{{ stats.total_links }}</h4>
+                            <p class="mb-0">Active Links</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="stats-card text-white">
+                            <i class="fas fa-comments fa-2x mb-3"></i>
+                            <h4>{{ stats.total_messages }}</h4>
+                            <p class="mb-0">Messages Sent</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="stats-card text-white">
+                            <i class="fas fa-users fa-2x mb-3"></i>
+                            <h4>{{ stats.active_admins }}</h4>
+                            <p class="mb-0">Active Admins</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container">
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-plus-circle"></i> Generate New Message Link
+                    </h4>
+                </div>
+                <div class="card-body p-4">
+                    <form method="POST" action="/generate_link" id="linkForm">
+                        <div class="mb-4">
+                            <label for="bot_token" class="form-label fw-bold">
+                                <i class="fab fa-telegram text-primary"></i> Telegram Bot Token
+                            </label>
+                            <input type="text" 
+                                   class="form-control" 
+                                   id="bot_token" 
+                                   name="bot_token" 
+                                   placeholder="1234567890:ABCdefGHIjklMNOpqrsTUVwxyz"
+                                   required>
+                            <div class="form-text">
+                                Your Telegram bot token. Get it from @BotFather on Telegram.
+                            </div>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label for="admin_id" class="form-label fw-bold">
+                                <i class="fas fa-user text-success"></i> Telegram Admin ID
+                            </label>
+                            <input type="text" 
+                                   class="form-control" 
+                                   id="admin_id" 
+                                   name="admin_id" 
+                                   placeholder="123456789"
+                                   required>
+                            <div class="form-text">
+                                Your Telegram user ID. Use @userinfobot to get it.
+                            </div>
+                        </div>
+                        
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="fas fa-magic"></i> Generate Link
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- How it works -->
+            <div class="card mt-4">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-question-circle"></i> How It Works
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="d-flex mb-3">
+                                <div class="flex-shrink-0">
+                                    <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                        1
+                                    </div>
+                                </div>
+                                <div class="flex-grow-1 ms-3">
+                                    <h6>Create Link</h6>
+                                    <p class="text-muted mb-0">Enter your bot token and admin ID to generate a unique message link.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="d-flex mb-3">
+                                <div class="flex-shrink-0">
+                                    <div class="bg-success text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                        2
+                                    </div>
+                                </div>
+                                <div class="flex-grow-1 ms-3">
+                                    <h6>Share Link</h6>
+                                    <p class="text-muted mb-0">Share the generated link with anyone who needs to contact you.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="d-flex mb-3">
+                                <div class="flex-shrink-0">
+                                    <div class="bg-warning text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                        3
+                                    </div>
+                                </div>
+                                <div class="flex-grow-1 ms-3">
+                                    <h6>Receive Messages</h6>
+                                    <p class="text-muted mb-0">Users fill out the form and messages are sent to your Telegram.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="d-flex mb-3">
+                                <div class="flex-shrink-0">
+                                    <div class="bg-danger text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                        4
+                                    </div>
+                                </div>
+                                <div class="flex-grow-1 ms-3">
+                                    <h6>Auto Expire</h6>
+                                    <p class="text-muted mb-0">Links expire after 24 hours or after first use for security.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- API Documentation -->
+            <div class="card mt-4">
+                <div class="card-header bg-dark text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-code"></i> API Endpoint
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <p>You can also generate links via GET request:</p>
+                    <div class="bg-light p-3 rounded mb-3">
+                        <code>/api/link?admin_id=YOUR_ADMIN_ID&token=YOUR_BOT_TOKEN</code>
+                    </div>
+                    <p class="mb-0 text-muted">Returns JSON with link details for programmatic access.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Help Modal -->
+<div class="modal fade" id="helpModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">How to Get Bot Token & Admin ID</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <h6>Getting Bot Token:</h6>
+                <ol>
+                    <li>Open Telegram and search for <strong>@BotFather</strong></li>
+                    <li>Start a chat and send <code>/newbot</code></li>
+                    <li>Follow instructions to create your bot</li>
+                    <li>Copy the token provided (format: 1234567890:ABC...)</li>
+                </ol>
+                
+                <h6>Getting Admin ID:</h6>
+                <ol>
+                    <li>Search for <strong>@userinfobot</strong> on Telegram</li>
+                    <li>Start a chat and it will show your user ID</li>
+                    <li>Use this number as your admin ID</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.getElementById('linkForm').addEventListener('submit', function(e) {
+    const botToken = document.getElementById('bot_token').value;
+    const adminId = document.getElementById('admin_id').value;
+    
+    // Basic validation
+    if (!botToken.includes(':')) {
+        e.preventDefault();
+        alert('Invalid bot token format. Should contain a colon (:).');
+        return;
+    }
+    
+    if (!/^\d+$/.test(adminId)) {
+        e.preventDefault();
+        alert('Admin ID should only contain numbers.');
+        return;
+    }
+    
+    // Show loading state
+    const submitBtn = this.querySelector('button[type="submit"]');
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating...';
+    submitBtn.disabled = true;
+});
+
+// Auto-format bot token (optional)
+document.getElementById('bot_token').addEventListener('input', function() {
+    // Remove any extra spaces and ensure proper formatting
+    this.value = this.value.trim();
+});
+</script>
+{% endblock %}

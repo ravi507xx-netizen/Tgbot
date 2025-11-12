@@ -1,0 +1,332 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Dashboard{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-md-8">
+                            <h2 class="mb-2">
+                                <i class="fas fa-tachometer-alt"></i> Admin Dashboard
+                            </h2>
+                            <p class="mb-0">
+                                Welcome back! Here's an overview of your Telegram message links and activity.
+                            </p>
+                        </div>
+                        <div class="col-md-4 text-end">
+                            <div class="btn-group">
+                                <a href="/admin/logout" class="btn btn-light">
+                                    <i class="fas fa-sign-out-alt"></i> Logout
+                                </a>
+                                <button class="btn btn-outline-light" onclick="refreshData()">
+                                    <i class="fas fa-sync-alt"></i> Refresh
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card text-center border-success">
+                <div class="card-body">
+                    <i class="fas fa-link text-success" style="font-size: 2.5rem;"></i>
+                    <h3 class="mt-3">{{ stats.total_links }}</h3>
+                    <p class="text-muted mb-0">Active Links</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center border-info">
+                <div class="card-body">
+                    <i class="fas fa-check-circle text-info" style="font-size: 2.5rem;"></i>
+                    <h3 class="mt-3">{{ stats.total_used_links }}</h3>
+                    <p class="text-muted mb-0">Used Links</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center border-primary">
+                <div class="card-body">
+                    <i class="fas fa-comments text-primary" style="font-size: 2.5rem;"></i>
+                    <h3 class="mt-3">{{ stats.total_messages }}</h3>
+                    <p class="text-muted mb-0">Messages Sent</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center border-warning">
+                <div class="card-body">
+                    <i class="fas fa-users text-warning" style="font-size: 2.5rem;"></i>
+                    <h3 class="mt-3">{{ stats.active_admins }}</h3>
+                    <p class="text-muted mb-0">Active Admins</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Admin Data -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <div class="row align-items-center">
+                        <div class="col-md-6">
+                            <h5 class="mb-0">
+                                <i class="fas fa-database"></i> All Generated Data
+                            </h5>
+                        </div>
+                        <div class="col-md-6 text-end">
+                            <div class="btn-group btn-group-sm">
+                                <button class="btn btn-outline-primary" onclick="exportData('json')">
+                                    <i class="fas fa-download"></i> Export JSON
+                                </button>
+                                <button class="btn btn-outline-success" onclick="exportData('csv')">
+                                    <i class="fas fa-table"></i> Export CSV
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    {% if admin_data %}
+                        {% for admin_id, admin_info in admin_data.items() %}
+                            <div class="admin-section mb-4">
+                                <div class="card border-primary">
+                                    <div class="card-header bg-light">
+                                        <div class="row align-items-center">
+                                            <div class="col-md-8">
+                                                <h6 class="mb-0">
+                                                    <i class="fas fa-user text-primary"></i> 
+                                                    Admin ID: {{ admin_id }}
+                                                    {% if admin_info.bot_tokens %}
+                                                        <small class="text-muted">
+                                                            ({{ admin_info.bot_tokens|length }} bot(s))
+                                                        </small>
+                                                    {% endif %}
+                                                </h6>
+                                            </div>
+                                            <div class="col-md-4 text-end">
+                                                <small class="text-muted">
+                                                    {{ admin_info.links|length if admin_info.links else 0 }} total links
+                                                </small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="card-body">
+                                        {% if admin_info.links %}
+                                            <div class="table-responsive">
+                                                <table class="table table-sm">
+                                                    <thead>
+                                                        <tr>
+                                                            <th>Link ID</th>
+                                                            <th>Bot Username</th>
+                                                            <th>Created</th>
+                                                            <th>Status</th>
+                                                            <th>Messages</th>
+                                                            <th>Actions</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        {% for link in admin_info.links %}
+                                                            <tr class="{% if link.used %}table-warning{% else %}table-success{% endif %}">
+                                                                <td>
+                                                                    <code>{{ link.link_id }}</code>
+                                                                </td>
+                                                                <td>
+                                                                    <small>@{{ link.bot_username or 'Unknown' }}</small>
+                                                                </td>
+                                                                <td>
+                                                                    <small>{{ link.created_at[:19].replace('T', ' ') if link.created_at else 'N/A' }}</small>
+                                                                </td>
+                                                                <td>
+                                                                    {% if link.used %}
+                                                                        <span class="badge bg-warning">
+                                                                            <i class="fas fa-check"></i> Used
+                                                                        </span>
+                                                                    {% else %}
+                                                                        <span class="badge bg-success">
+                                                                            <i class="fas fa-clock"></i> Active
+                                                                        </span>
+                                                                    {% endif %}
+                                                                </td>
+                                                                <td>
+                                                                    {% if link.messages %}
+                                                                        {% for msg in link.messages %}
+                                                                            {% if msg %}
+                                                                                <div class="text-truncate" style="max-width: 200px;" title="{{ msg }}">
+                                                                                    {{ msg[:50] }}{% if msg|length > 50 %}...{% endif %}
+                                                                                </div>
+                                                                            {% endif %}
+                                                                        {% endfor %}
+                                                                    {% else %}
+                                                                        <small class="text-muted">No messages</small>
+                                                                    {% endif %}
+                                                                </td>
+                                                                <td>
+                                                                    <div class="btn-group btn-group-sm">
+                                                                        {% if not link.used %}
+                                                                            <a href="/send/{{ link.link_id }}" 
+                                                                               class="btn btn-outline-primary btn-sm" 
+                                                                               target="_blank">
+                                                                                <i class="fas fa-eye"></i>
+                                                                            </a>
+                                                                        {% endif %}
+                                                                        <button class="btn btn-outline-info btn-sm" 
+                                                                                onclick="copyToClipboard('{{ request.host_url.rstrip('/') }}/send/{{ link.link_id }}')">
+                                                                            <i class="fas fa-copy"></i>
+                                                                        </button>
+                                                                    </div>
+                                                                </td>
+                                                            </tr>
+                                                        {% endfor %}
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        {% else %}
+                                            <div class="text-center text-muted py-4">
+                                                <i class="fas fa-inbox fa-2x mb-3"></i>
+                                                <p>No links generated for this admin yet.</p>
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="text-center text-muted py-5">
+                            <i class="fas fa-database fa-3x mb-3"></i>
+                            <h5>No Data Available</h5>
+                            <p>No Telegram links have been generated yet.</p>
+                            <a href="/" class="btn btn-primary">
+                                <i class="fas fa-plus"></i> Generate First Link
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Refresh Status Modal -->
+<div class="modal fade" id="refreshModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Data Refresh</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <p class="mt-3">Refreshing dashboard data...</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Refresh dashboard data
+function refreshData() {
+    const modal = new bootstrap.Modal(document.getElementById('refreshModal'));
+    modal.show();
+    
+    setTimeout(() => {
+        window.location.reload();
+    }, 1500);
+}
+
+// Export data functions
+function exportData(format) {
+    const data = {{ admin_data|tojson|safe }};
+    let content, filename, mimeType;
+    
+    if (format === 'json') {
+        content = JSON.stringify(data, null, 2);
+        filename = 'telegram_links_data.json';
+        mimeType = 'application/json';
+    } else if (format === 'csv') {
+        // Convert to CSV
+        let csv = 'Admin ID,Link ID,Bot Username,Created At,Status,Message 1,Message 2\n';
+        
+        Object.keys(data).forEach(adminId => {
+            const admin = data[adminId];
+            if (admin.links) {
+                admin.links.forEach(link => {
+                    const messages = link.messages || ['', ''];
+                    csv += `${adminId},${link.link_id},"${link.bot_username}","${link.created_at || ''}",${link.used ? 'Used' : 'Active'},"${messages[0] || ''}","${messages[1] || ''}"\n`;
+                });
+            }
+        });
+        
+        content = csv;
+        filename = 'telegram_links_data.csv';
+        mimeType = 'text/csv';
+    }
+    
+    // Create download
+    const blob = new Blob([content], { type: mimeType });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(url);
+}
+
+// Auto-refresh every 5 minutes
+setInterval(() => {
+    if (document.visibilityState === 'visible') {
+        console.log('Auto-refreshing dashboard...');
+        refreshData();
+    }
+}, 5 * 60 * 1000);
+
+// Keyboard shortcuts
+document.addEventListener('keydown', function(e) {
+    // Ctrl+R or F5 for refresh
+    if ((e.ctrlKey && e.key === 'r') || e.key === 'F5') {
+        e.preventDefault();
+        refreshData();
+    }
+});
+
+// Search functionality (if needed for large datasets)
+function searchData() {
+    const searchTerm = prompt('Search links by Admin ID, Link ID, or Bot Username:');
+    if (searchTerm) {
+        // Simple search implementation
+        const cards = document.querySelectorAll('.admin-section');
+        cards.forEach(card => {
+            const text = card.textContent.toLowerCase();
+            if (text.includes(searchTerm.toLowerCase())) {
+                card.style.display = '';
+            } else {
+                card.style.display = 'none';
+            }
+        });
+    }
+}
+
+// Page visibility change handler
+document.addEventListener('visibilitychange', function() {
+    if (document.visibilityState === 'visible') {
+        // Page became visible, update timestamp
+        console.log('Dashboard became visible');
+    }
+});
+</script>
+{% endblock %}

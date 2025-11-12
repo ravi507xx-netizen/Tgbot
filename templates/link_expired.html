@@ -1,0 +1,163 @@
+{% extends "base.html" %}
+
+{% block title %}Link Expired{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card border-warning">
+                <div class="card-header bg-warning text-dark text-center">
+                    <h3 class="mb-0">
+                        <i class="fas fa-exclamation-triangle"></i> Link Expired
+                    </h3>
+                </div>
+                <div class="card-body text-center p-5">
+                    <div class="mb-4">
+                        <i class="fas fa-ban text-warning" style="font-size: 5rem;"></i>
+                    </div>
+                    
+                    <h4 class="mb-4">{{ message }}</h4>
+                    
+                    <div class="alert alert-warning">
+                        <h6><i class="fas fa-info-circle"></i> What Happened?</h6>
+                        <p class="mb-0">
+                            This message link has expired and can no longer be used for sending messages. 
+                            This is a security feature to protect against unauthorized access.
+                        </p>
+                    </div>
+                    
+                    <div class="row mt-4">
+                        <div class="col-md-4">
+                            <div class="text-center mb-3">
+                                <i class="fas fa-clock text-primary" style="font-size: 2rem;"></i>
+                                <h6>Time Expired</h6>
+                                <small class="text-muted">Link was active for 24 hours</small>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="text-center mb-3">
+                                <i class="fas fa-use text-success" style="font-size: 2rem;"></i>
+                                <h6>Already Used</h6>
+                                <small class="text-muted">Link was used previously</small>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="text-center mb-3">
+                                <i class="fas fa-shield-alt text-info" style="font-size: 2rem;"></i>
+                                <h6>Security Measure</h6>
+                                <small class="text-muted">Prevents unauthorized access</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <hr class="my-4">
+                    
+                    <div class="card bg-light">
+                        <div class="card-body">
+                            <h6><i class="fas fa-lightbulb"></i> Need to Send a Message?</h6>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <h6 class="text-success">For New Messages:</h6>
+                                    <ul class="list-unstyled">
+                                        <li><i class="fas fa-plus text-success"></i> Generate a new link</li>
+                                        <li><i class="fas fa-plus text-success"></i> Share the new link</li>
+                                        <li><i class="fas fa-plus text-success"></i> Messages will be sent immediately</li>
+                                    </ul>
+                                </div>
+                                <div class="col-md-6">
+                                    <h6 class="text-primary">Alternative Options:</h6>
+                                    <ul class="list-unstyled">
+                                        <li><i class="fas fa-comment text-primary"></i> Message directly on Telegram</li>
+                                        <li><i class="fas fa-envelope text-primary"></i> Use email contact</li>
+                                        <li><i class="fas fa-phone text-primary"></i> Call directly</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-4">
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-center">
+                            <a href="/" class="btn btn-success btn-lg">
+                                <i class="fas fa-plus"></i> Generate New Link
+                            </a>
+                            <button class="btn btn-outline-warning btn-lg" onclick="history.back()">
+                                <i class="fas fa-arrow-left"></i> Go Back
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Security Information -->
+            <div class="card mt-4">
+                <div class="card-header bg-info text-white">
+                    <h6 class="mb-0">
+                        <i class="fas fa-shield-alt"></i> Why Links Expire
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>Security Benefits:</h6>
+                            <ul>
+                                <li>Prevents unauthorized message flooding</li>
+                                <li>Protects against spam and abuse</li>
+                                <li>Maintains link integrity</li>
+                                <li>Ensures fresh contact opportunities</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>User Benefits:</h6>
+                            <ul>
+                                <li>Guaranteed fresh links for each request</li>
+                                <li>Reduced risk of spam</li>
+                                <li>Better control over message flow</li>
+                                <li>Improved message delivery tracking</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Show helpful message when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('Link expired page loaded');
+    
+    // Auto-redirect to home after 30 seconds (optional)
+    let countdown = 30;
+    const countdownElement = document.createElement('div');
+    countdownElement.className = 'alert alert-info text-center mt-3';
+    countdownElement.innerHTML = `
+        <i class="fas fa-info-circle"></i> 
+        Redirecting to home page in <span id="countdown">${countdown}</span> seconds...
+    `;
+    
+    const card = document.querySelector('.card');
+    card.appendChild(countdownElement);
+    
+    const timer = setInterval(() => {
+        countdown--;
+        document.getElementById('countdown').textContent = countdown;
+        
+        if (countdown <= 0) {
+            clearInterval(timer);
+            window.location.href = '/';
+        }
+    }, 1000);
+    
+    // Cancel auto-redirect if user clicks anything
+    document.addEventListener('click', () => {
+        clearInterval(timer);
+        countdownElement.style.display = 'none';
+    }, { once: true });
+});
+</script>
+{% endblock %}

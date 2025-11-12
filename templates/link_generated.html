@@ -1,0 +1,142 @@
+{% extends "base.html" %}
+
+{% block title %}Link Generated Successfully{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card border-success">
+                <div class="card-header bg-success text-white text-center">
+                    <h3 class="mb-0">
+                        <i class="fas fa-check-circle"></i> Link Generated Successfully!
+                    </h3>
+                </div>
+                <div class="card-body text-center p-5">
+                    <div class="mb-4">
+                        <i class="fas fa-link text-success" style="font-size: 4rem;"></i>
+                    </div>
+                    
+                    <h4 class="mb-4">Your Unique Message Link</h4>
+                    
+                    <div class="mb-4">
+                        <div class="link-display border p-3 bg-light">
+                            <strong>Link:</strong> {{ request.host_url.rstrip('/') }}{{ link }}
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <div class="d-grid">
+                                <button class="btn btn-primary copy-btn" onclick="copyToClipboard('{{ request.host_url.rstrip('/') }}{{ link }}')">
+                                    <i class="fas fa-copy"></i> Copy Link
+                                </button>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="d-grid">
+                                <a href="{{ link }}" class="btn btn-outline-primary" target="_blank">
+                                    <i class="fas fa-external-link-alt"></i> Test Link
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="alert alert-info">
+                        <h6><i class="fas fa-info-circle"></i> Link Details</h6>
+                        <ul class="list-unstyled mb-0">
+                            <li><strong>Link ID:</strong> {{ link_id }}</li>
+                            <li><strong>Expires:</strong> 24 hours from now</li>
+                            <li><strong>Usage:</strong> One-time use only</li>
+                            <li><strong>Messages:</strong> 2 message fields available</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="text-center mb-3">
+                                <i class="fas fa-clock text-warning" style="font-size: 2rem;"></i>
+                                <h6>24 Hour Expiry</h6>
+                                <small class="text-muted">Link expires in 24 hours</small>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="text-center mb-3">
+                                <i class="fas fa-shield-alt text-info" style="font-size: 2rem;"></i>
+                                <h6>One-Time Use</h6>
+                                <small class="text-muted">Expires after first message sent</small>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="text-center mb-3">
+                                <i class="fas fa-telegram text-primary" style="font-size: 2rem;"></i>
+                                <h6>Telegram Delivery</h6>
+                                <small class="text-muted">Messages sent to your Telegram</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <hr class="my-4">
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-center">
+                        <a href="/" class="btn btn-success btn-lg">
+                            <i class="fas fa-plus"></i> Generate Another Link
+                        </a>
+                        <a href="/admin" class="btn btn-outline-primary btn-lg">
+                            <i class="fas fa-cog"></i> View Admin Dashboard
+                        </a>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Share Instructions -->
+            <div class="card mt-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-share-alt"></i> How to Share Your Link
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>Share via Telegram:</h6>
+                            <ul>
+                                <li>Send the link directly in chats</li>
+                                <li>Add it to your bio or description</li>
+                                <li>Share in groups and channels</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Share via Other Platforms:</h6>
+                            <ul>
+                                <li>Add to website contact pages</li>
+                                <li>Share on social media</li>
+                                <li>Include in email signatures</li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <div class="alert alert-warning mt-3">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <strong>Security Note:</strong> This link will expire after 24 hours or after the first message is sent. Generate a new link for additional messages.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Auto-show toast notification if supported
+if ('Notification' in window && 'Notification' in window) {
+    document.addEventListener('DOMContentLoaded', function() {
+        if (Notification.permission === 'granted') {
+            new Notification('Link Generated!', {
+                body: 'Your message link has been created successfully.',
+                icon: '/favicon.ico'
+            });
+        }
+    });
+}
+</script>
+{% endblock %}
