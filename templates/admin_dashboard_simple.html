@@ -1,0 +1,219 @@
+{% extends "base_simple.html" %}
+
+{% block title %}Admin Dashboard{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <h2 class="mb-0">
+                        <i class="fas fa-tachometer-alt me-2"></i>
+                        Admin Dashboard
+                    </h2>
+                    <p class="text-muted mt-2 mb-0">
+                        Welcome back, {{ session.admin_username }} | Manage your message links and monitor activity
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistics -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body text-center">
+                    <i class="fas fa-link text-primary" style="font-size: 2rem;"></i>
+                    <h3 class="mt-2 text-primary">{{ stats.total_links }}</h3>
+                    <p class="text-muted mb-0">Active Links</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body text-center">
+                    <i class="fas fa-check-circle text-success" style="font-size: 2rem;"></i>
+                    <h3 class="mt-2 text-success">{{ stats.total_used_links }}</h3>
+                    <p class="text-muted mb-0">Used Links</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body text-center">
+                    <i class="fas fa-paper-plane text-warning" style="font-size: 2rem;"></i>
+                    <h3 class="mt-2 text-warning">{{ stats.total_messages }}</h3>
+                    <p class="text-muted mb-0">Messages Sent</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body text-center">
+                    <i class="fas fa-users text-info" style="font-size: 2rem;"></i>
+                    <h3 class="mt-2 text-info">{{ stats.active_admins }}</h3>
+                    <p class="text-muted mb-0">Active Admins</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Activity -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-history me-2"></i>
+                        Recent Activity
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if admin_data %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Admin ID</th>
+                                        <th>Bot Username</th>
+                                        <th>Links Generated</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for admin_id, data in admin_data.items() %}
+                                    <tr>
+                                        <td>
+                                            <code>{{ admin_id }}</code>
+                                        </td>
+                                        <td>
+                                            {% if data.links %}
+                                                @{{ data.links[0].bot_username }}
+                                            {% else %}
+                                                <span class="text-muted">N/A</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>{{ data.links|length }}</td>
+                                        <td>
+                                            {% set used_count = data.links|selectattr('used')|list|length %}
+                                            {% if used_count > 0 %}
+                                                <span class="badge bg-success">{{ used_count }} used</span>
+                                            {% else %}
+                                                <span class="badge bg-secondary">No usage</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <button class="btn btn-sm btn-outline-primary" 
+                                                    onclick="viewLinks('{{ admin_id }}')">
+                                                <i class="fas fa-eye"></i> View Links
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-inbox text-muted" style="font-size: 3rem;"></i>
+                            <h5 class="text-muted mt-3">No Data Available</h5>
+                            <p class="text-muted">No message links have been generated yet.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Links Modal -->
+<div class="modal fade" id="linksModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-links me-2"></i>
+                    Links for Admin ID: <span id="modalAdminId"></span>
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="modalContent">
+                    <!-- Links will be loaded here -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function viewLinks(adminId) {
+    document.getElementById('modalAdminId').textContent = adminId;
+    
+    // Fetch links data
+    fetch(`/admin/links/${adminId}`)
+        .then(response => response.json())
+        .then(data => {
+            let html = '';
+            if (data.links && data.links.length > 0) {
+                html = `
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Link ID</th>
+                                    <th>Created</th>
+                                    <th>Status</th>
+                                    <th>Sent At</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                `;
+                
+                data.links.forEach(link => {
+                    html += `
+                        <tr>
+                            <td><code>${link.link_id}</code></td>
+                            <td>${new Date(link.created_at).toLocaleString()}</td>
+                            <td>
+                                ${link.used ? 
+                                    '<span class="badge bg-success">Used</span>' : 
+                                    '<span class="badge bg-warning">Active</span>'
+                                }
+                            </td>
+                            <td>
+                                ${link.sent_at ? 
+                                    new Date(link.sent_at).toLocaleString() : 
+                                    '<span class="text-muted">Not sent</span>'
+                                }
+                            </td>
+                        </tr>
+                    `;
+                });
+                
+                html += `
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+            } else {
+                html = '<p class="text-muted text-center">No links found for this admin.</p>';
+            }
+            
+            document.getElementById('modalContent').innerHTML = html;
+            new bootstrap.Modal(document.getElementById('linksModal')).show();
+        })
+        .catch(error => {
+            document.getElementById('modalContent').innerHTML = 
+                '<div class="alert alert-danger">Error loading links data.</div>';
+            new bootstrap.Modal(document.getElementById('linksModal')).show();
+        });
+}
+</script>
+{% endblock %}
