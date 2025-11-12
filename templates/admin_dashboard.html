@@ -1,332 +1,1009 @@
 {% extends "base.html" %}
 
-{% block title %}Admin Dashboard{% endblock %}
+{% block title %}Admin Dashboard - Premium Control Panel{% endblock %}
+
+{% block extra_css %}
+<style>
+    .dashboard-hero {
+        background: var(--primary-gradient);
+        color: white;
+        padding: 3rem 0;
+        margin-bottom: 2rem;
+        border-radius: 0 0 2rem 2rem;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .dashboard-hero::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+        animation: rotate 30s linear infinite;
+    }
+
+    @keyframes rotate {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+    }
+
+    .hero-content {
+        position: relative;
+        z-index: 2;
+    }
+
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .stat-card {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(20px);
+        border-radius: 20px;
+        padding: 2rem;
+        text-align: center;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        position: relative;
+        overflow: hidden;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+    }
+
+    .stat-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: var(--primary-gradient);
+    }
+
+    .stat-card:hover {
+        transform: translateY(-8px) scale(1.02);
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+    }
+
+    .stat-icon {
+        width: 80px;
+        height: 80px;
+        margin: 0 auto 1.5rem;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2rem;
+        color: white;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    }
+
+    .stat-card:nth-child(1) .stat-icon {
+        background: var(--success-gradient);
+    }
+
+    .stat-card:nth-child(2) .stat-icon {
+        background: var(--warning-gradient);
+    }
+
+    .stat-card:nth-child(3) .stat-icon {
+        background: var(--secondary-gradient);
+    }
+
+    .stat-card:nth-child(4) .stat-icon {
+        background: var(--dark-gradient);
+    }
+
+    .stat-number {
+        font-size: 3rem;
+        font-weight: 800;
+        margin-bottom: 0.5rem;
+        background: var(--primary-gradient);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .stat-label {
+        color: #6c757d;
+        font-weight: 600;
+        font-size: 1.1rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .admin-section {
+        margin-bottom: 2rem;
+    }
+
+    .admin-card {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        border-radius: 20px;
+        overflow: hidden;
+        box-shadow: 0 15px 50px rgba(0, 0, 0, 0.1);
+        transition: all 0.3s ease;
+    }
+
+    .admin-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 25px 70px rgba(0, 0, 0, 0.15);
+    }
+
+    .admin-header {
+        background: var(--primary-gradient);
+        color: white;
+        padding: 1.5rem;
+        position: relative;
+    }
+
+    .admin-header::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+        animation: rotate 20s linear infinite;
+    }
+
+    .admin-header .row {
+        position: relative;
+        z-index: 2;
+    }
+
+    .data-table {
+        background: rgba(255, 255, 255, 0.9);
+        border-radius: 0 0 20px 20px;
+        overflow: hidden;
+    }
+
+    .table {
+        margin-bottom: 0;
+    }
+
+    .table thead th {
+        background: rgba(248, 249, 250, 0.8);
+        border: none;
+        font-weight: 700;
+        color: #495057;
+        padding: 1.5rem 1rem;
+        text-transform: uppercase;
+        font-size: 0.875rem;
+        letter-spacing: 0.5px;
+    }
+
+    .table tbody tr {
+        transition: all 0.3s ease;
+    }
+
+    .table tbody tr:hover {
+        background: rgba(102, 126, 234, 0.05);
+        transform: scale(1.01);
+    }
+
+    .table tbody td {
+        padding: 1.25rem 1rem;
+        border: none;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        vertical-align: middle;
+    }
+
+    .badge {
+        padding: 0.5rem 1rem;
+        border-radius: 50px;
+        font-weight: 600;
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .badge-success {
+        background: var(--success-gradient);
+        color: white;
+        box-shadow: 0 4px 15px rgba(79, 172, 254, 0.4);
+    }
+
+    .badge-warning {
+        background: var(--warning-gradient);
+        color: white;
+        box-shadow: 0 4px 15px rgba(67, 233, 123, 0.4);
+    }
+
+    .message-preview {
+        background: rgba(0, 0, 0, 0.03);
+        border-radius: 8px;
+        padding: 0.75rem;
+        font-size: 0.875rem;
+        font-family: 'Monaco', monospace;
+        color: #495057;
+        border-left: 3px solid #667eea;
+        max-width: 200px;
+        word-break: break-word;
+    }
+
+    .btn-group-sm > .btn {
+        padding: 0.375rem 0.75rem;
+        border-radius: 8px;
+        font-size: 0.75rem;
+        transition: all 0.3s ease;
+    }
+
+    .btn-outline-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+    }
+
+    .btn-outline-info:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(13, 202, 240, 0.4);
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 4rem 2rem;
+        color: #6c757d;
+    }
+
+    .empty-icon {
+        font-size: 4rem;
+        margin-bottom: 2rem;
+        opacity: 0.5;
+    }
+
+    .export-controls {
+        background: rgba(255, 255, 255, 0.9);
+        border-radius: 12px;
+        padding: 1rem;
+        margin-bottom: 2rem;
+        backdrop-filter: blur(10px);
+    }
+
+    .search-box {
+        background: rgba(255, 255, 255, 0.8);
+        border: 2px solid #e3f2fd;
+        border-radius: 12px;
+        padding: 0.75rem 1.5rem;
+        transition: all 0.3s ease;
+        backdrop-filter: blur(10px);
+    }
+
+    .search-box:focus {
+        border-color: #667eea;
+        box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+        background: rgba(255, 255, 255, 1);
+    }
+
+    .refresh-btn {
+        background: var(--success-gradient);
+        border: none;
+        border-radius: 12px;
+        padding: 0.75rem 1.5rem;
+        color: white;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(79, 172, 254, 0.4);
+    }
+
+    .refresh-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(79, 172, 254, 0.6);
+        color: white;
+    }
+
+    @media (max-width: 768px) {
+        .stats-grid {
+            grid-template-columns: 1fr;
+            gap: 1rem;
+        }
+        
+        .stat-card {
+            padding: 1.5rem;
+        }
+        
+        .stat-number {
+            font-size: 2rem;
+        }
+        
+        .dashboard-hero {
+            padding: 2rem 0;
+        }
+        
+        .table-responsive {
+            border-radius: 12px;
+        }
+    }
+
+    .status-indicator {
+        display: inline-block;
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        margin-right: 0.5rem;
+        animation: pulse 2s infinite;
+    }
+
+    .status-active {
+        background: #4caf50;
+    }
+
+    .status-inactive {
+        background: #ff9800;
+    }
+
+    @keyframes pulse {
+        0% { opacity: 1; }
+        50% { opacity: 0.5; }
+        100% { opacity: 1; }
+    }
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="container">
-    <!-- Header -->
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="card bg-primary text-white">
-                <div class="card-body">
-                    <div class="row align-items-center">
-                        <div class="col-md-8">
-                            <h2 class="mb-2">
-                                <i class="fas fa-tachometer-alt"></i> Admin Dashboard
-                            </h2>
-                            <p class="mb-0">
-                                Welcome back! Here's an overview of your Telegram message links and activity.
-                            </p>
-                        </div>
-                        <div class="col-md-4 text-end">
-                            <div class="btn-group">
-                                <a href="/admin/logout" class="btn btn-light">
-                                    <i class="fas fa-sign-out-alt"></i> Logout
-                                </a>
-                                <button class="btn btn-outline-light" onclick="refreshData()">
-                                    <i class="fas fa-sync-alt"></i> Refresh
-                                </button>
-                            </div>
-                        </div>
+<div class="dashboard-hero">
+    <div class="container">
+        <div class="hero-content" data-aos="fade-up">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <h1 class="display-4 fw-bold mb-3">
+                        <i class="fas fa-tachometer-alt me-3"></i>Admin Dashboard
+                    </h1>
+                    <p class="lead mb-0 opacity-90">
+                        Premium control panel for managing Telegram message links and system monitoring
+                    </p>
+                </div>
+                <div class="col-md-4 text-end" data-aos="fade-left" data-aos-delay="200">
+                    <div class="d-flex gap-2 justify-content-end flex-wrap">
+                        <button class="btn btn-light" onclick="refreshData()">
+                            <i class="fas fa-sync-alt me-2"></i>Refresh Data
+                        </button>
+                        <a href="/admin/logout" class="btn btn-outline-light">
+                            <i class="fas fa-sign-out-alt me-2"></i>Logout
+                        </a>
                     </div>
                 </div>
             </div>
-        </div>
-    </div>
-    
-    <!-- Statistics Cards -->
-    <div class="row mb-4">
-        <div class="col-md-3">
-            <div class="card text-center border-success">
-                <div class="card-body">
-                    <i class="fas fa-link text-success" style="font-size: 2.5rem;"></i>
-                    <h3 class="mt-3">{{ stats.total_links }}</h3>
-                    <p class="text-muted mb-0">Active Links</p>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card text-center border-info">
-                <div class="card-body">
-                    <i class="fas fa-check-circle text-info" style="font-size: 2.5rem;"></i>
-                    <h3 class="mt-3">{{ stats.total_used_links }}</h3>
-                    <p class="text-muted mb-0">Used Links</p>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card text-center border-primary">
-                <div class="card-body">
-                    <i class="fas fa-comments text-primary" style="font-size: 2.5rem;"></i>
-                    <h3 class="mt-3">{{ stats.total_messages }}</h3>
-                    <p class="text-muted mb-0">Messages Sent</p>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card text-center border-warning">
-                <div class="card-body">
-                    <i class="fas fa-users text-warning" style="font-size: 2.5rem;"></i>
-                    <h3 class="mt-3">{{ stats.active_admins }}</h3>
-                    <p class="text-muted mb-0">Active Admins</p>
-                </div>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Admin Data -->
-    <div class="row">
-        <div class="col-12">
-            <div class="card">
-                <div class="card-header">
-                    <div class="row align-items-center">
-                        <div class="col-md-6">
-                            <h5 class="mb-0">
-                                <i class="fas fa-database"></i> All Generated Data
-                            </h5>
+            
+            <!-- Quick Status -->
+            <div class="row mt-4">
+                <div class="col-12">
+                    <div class="d-flex align-items-center justify-content-center gap-4 flex-wrap">
+                        <div class="d-flex align-items-center">
+                            <span class="status-indicator status-active"></span>
+                            <small class="text-white">System Online</small>
                         </div>
-                        <div class="col-md-6 text-end">
-                            <div class="btn-group btn-group-sm">
-                                <button class="btn btn-outline-primary" onclick="exportData('json')">
-                                    <i class="fas fa-download"></i> Export JSON
-                                </button>
-                                <button class="btn btn-outline-success" onclick="exportData('csv')">
-                                    <i class="fas fa-table"></i> Export CSV
-                                </button>
-                            </div>
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-clock text-white-50 me-2"></i>
+                            <small class="text-white">Last Updated: <span id="lastUpdate">Just now</span></small>
+                        </div>
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-shield-alt text-white-50 me-2"></i>
+                            <small class="text-white">Secure Session</small>
                         </div>
                     </div>
-                </div>
-                <div class="card-body">
-                    {% if admin_data %}
-                        {% for admin_id, admin_info in admin_data.items() %}
-                            <div class="admin-section mb-4">
-                                <div class="card border-primary">
-                                    <div class="card-header bg-light">
-                                        <div class="row align-items-center">
-                                            <div class="col-md-8">
-                                                <h6 class="mb-0">
-                                                    <i class="fas fa-user text-primary"></i> 
-                                                    Admin ID: {{ admin_id }}
-                                                    {% if admin_info.bot_tokens %}
-                                                        <small class="text-muted">
-                                                            ({{ admin_info.bot_tokens|length }} bot(s))
-                                                        </small>
-                                                    {% endif %}
-                                                </h6>
-                                            </div>
-                                            <div class="col-md-4 text-end">
-                                                <small class="text-muted">
-                                                    {{ admin_info.links|length if admin_info.links else 0 }} total links
-                                                </small>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="card-body">
-                                        {% if admin_info.links %}
-                                            <div class="table-responsive">
-                                                <table class="table table-sm">
-                                                    <thead>
-                                                        <tr>
-                                                            <th>Link ID</th>
-                                                            <th>Bot Username</th>
-                                                            <th>Created</th>
-                                                            <th>Status</th>
-                                                            <th>Messages</th>
-                                                            <th>Actions</th>
-                                                        </tr>
-                                                    </thead>
-                                                    <tbody>
-                                                        {% for link in admin_info.links %}
-                                                            <tr class="{% if link.used %}table-warning{% else %}table-success{% endif %}">
-                                                                <td>
-                                                                    <code>{{ link.link_id }}</code>
-                                                                </td>
-                                                                <td>
-                                                                    <small>@{{ link.bot_username or 'Unknown' }}</small>
-                                                                </td>
-                                                                <td>
-                                                                    <small>{{ link.created_at[:19].replace('T', ' ') if link.created_at else 'N/A' }}</small>
-                                                                </td>
-                                                                <td>
-                                                                    {% if link.used %}
-                                                                        <span class="badge bg-warning">
-                                                                            <i class="fas fa-check"></i> Used
-                                                                        </span>
-                                                                    {% else %}
-                                                                        <span class="badge bg-success">
-                                                                            <i class="fas fa-clock"></i> Active
-                                                                        </span>
-                                                                    {% endif %}
-                                                                </td>
-                                                                <td>
-                                                                    {% if link.messages %}
-                                                                        {% for msg in link.messages %}
-                                                                            {% if msg %}
-                                                                                <div class="text-truncate" style="max-width: 200px;" title="{{ msg }}">
-                                                                                    {{ msg[:50] }}{% if msg|length > 50 %}...{% endif %}
-                                                                                </div>
-                                                                            {% endif %}
-                                                                        {% endfor %}
-                                                                    {% else %}
-                                                                        <small class="text-muted">No messages</small>
-                                                                    {% endif %}
-                                                                </td>
-                                                                <td>
-                                                                    <div class="btn-group btn-group-sm">
-                                                                        {% if not link.used %}
-                                                                            <a href="/send/{{ link.link_id }}" 
-                                                                               class="btn btn-outline-primary btn-sm" 
-                                                                               target="_blank">
-                                                                                <i class="fas fa-eye"></i>
-                                                                            </a>
-                                                                        {% endif %}
-                                                                        <button class="btn btn-outline-info btn-sm" 
-                                                                                onclick="copyToClipboard('{{ request.host_url.rstrip('/') }}/send/{{ link.link_id }}')">
-                                                                            <i class="fas fa-copy"></i>
-                                                                        </button>
-                                                                    </div>
-                                                                </td>
-                                                            </tr>
-                                                        {% endfor %}
-                                                    </tbody>
-                                                </table>
-                                            </div>
-                                        {% else %}
-                                            <div class="text-center text-muted py-4">
-                                                <i class="fas fa-inbox fa-2x mb-3"></i>
-                                                <p>No links generated for this admin yet.</p>
-                                            </div>
-                                        {% endif %}
-                                    </div>
-                                </div>
-                            </div>
-                        {% endfor %}
-                    {% else %}
-                        <div class="text-center text-muted py-5">
-                            <i class="fas fa-database fa-3x mb-3"></i>
-                            <h5>No Data Available</h5>
-                            <p>No Telegram links have been generated yet.</p>
-                            <a href="/" class="btn btn-primary">
-                                <i class="fas fa-plus"></i> Generate First Link
-                            </a>
-                        </div>
-                    {% endif %}
                 </div>
             </div>
         </div>
     </div>
 </div>
 
+<div class="container">
+    <!-- Statistics Overview -->
+    <div class="stats-grid" data-aos="fade-up">
+        <div class="stat-card">
+            <div class="stat-icon">
+                <i class="fas fa-link"></i>
+            </div>
+            <div class="stat-number">{{ stats.total_links }}</div>
+            <div class="stat-label">Active Links</div>
+            <small class="text-muted mt-2 d-block">
+                <i class="fas fa-arrow-up text-success me-1"></i>Generated today
+            </small>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-icon">
+                <i class="fas fa-check-circle"></i>
+            </div>
+            <div class="stat-number">{{ stats.total_used_links }}</div>
+            <div class="stat-label">Used Links</div>
+            <small class="text-muted mt-2 d-block">
+                <i class="fas fa-check text-success me-1"></i>Completed requests
+            </small>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-icon">
+                <i class="fas fa-comments"></i>
+            </div>
+            <div class="stat-number">{{ stats.total_messages }}</div>
+            <div class="stat-label">Messages Sent</div>
+            <small class="text-muted mt-2 d-block">
+                <i class="fas fa-paper-plane text-info me-1"></i>Total communications
+            </small>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-icon">
+                <i class="fas fa-users"></i>
+            </div>
+            <div class="stat-number">{{ stats.active_admins }}</div>
+            <div class="stat-label">Admin Sessions</div>
+            <small class="text-muted mt-2 d-block">
+                <i class="fas fa-user-shield text-warning me-1"></i>Current users
+            </small>
+        </div>
+    </div>
+
+    <!-- Export Controls -->
+    <div class="export-controls" data-aos="fade-up" data-aos-delay="100">
+        <div class="row align-items-center">
+            <div class="col-md-6">
+                <div class="d-flex align-items-center gap-3">
+                    <input type="text" class="form-control search-box" id="searchInput" placeholder="🔍 Search links, admins, or messages...">
+                    <button class="btn btn-outline-primary" onclick="clearSearch()">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="col-md-6 text-end">
+                <div class="btn-group">
+                    <button class="btn btn-outline-success" onclick="exportData('json')">
+                        <i class="fas fa-download me-2"></i>Export JSON
+                    </button>
+                    <button class="btn btn-outline-info" onclick="exportData('csv')">
+                        <i class="fas fa-table me-2"></i>Export CSV
+                    </button>
+                    <button class="btn btn-outline-warning" onclick="printReport()">
+                        <i class="fas fa-print me-2"></i>Print Report
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Admin Data Sections -->
+    {% if admin_data %}
+        {% for admin_id, admin_info in admin_data.items() %}
+            <div class="admin-section" data-aos="fade-up">
+                <div class="admin-card">
+                    <div class="admin-header">
+                        <div class="row align-items-center">
+                            <div class="col-md-8">
+                                <h5 class="mb-2">
+                                    <i class="fas fa-user-shield me-2"></i>
+                                    Admin ID: {{ admin_id }}
+                                    {% if admin_info.bot_tokens %}
+                                        <small class="opacity-75 ms-2">
+                                            <i class="fas fa-robot me-1"></i>{{ admin_info.bot_tokens|length }} bot(s) configured
+                                        </small>
+                                    {% endif %}
+                                </h5>
+                                <div class="d-flex align-items-center gap-3">
+                                    <small class="opacity-75">
+                                        <i class="fas fa-calendar me-1"></i>Created: {{ admin_info.links[0].created_at[:10] if admin_info.links else 'Unknown' }}
+                                    </small>
+                                    <small class="opacity-75">
+                                        <i class="fas fa-chart-line me-1"></i>{{ admin_info.links|length if admin_info.links else 0 }} total links
+                                    </small>
+                                </div>
+                            </div>
+                            <div class="col-md-4 text-end">
+                                <div class="btn-group">
+                                    <button class="btn btn-light btn-sm" onclick="viewAdminDetails('{{ admin_id }}')">
+                                        <i class="fas fa-eye me-1"></i>Details
+                                    </button>
+                                    <button class="btn btn-outline-light btn-sm" onclick="copyAdminLinks('{{ admin_id }}')">
+                                        <i class="fas fa-copy me-1"></i>Copy All
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="data-table">
+                        {% if admin_info.links %}
+                            <div class="table-responsive">
+                                <table class="table table-hover mb-0">
+                                    <thead>
+                                        <tr>
+                                            <th><i class="fas fa-link me-2"></i>Link ID</th>
+                                            <th><i class="fab fa-telegram me-2"></i>Bot</th>
+                                            <th><i class="fas fa-clock me-2"></i>Created</th>
+                                            <th><i class="fas fa-flag me-2"></i>Status</th>
+                                            <th><i class="fas fa-comment me-2"></i>Messages</th>
+                                            <th><i class="fas fa-tools me-2"></i>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for link in admin_info.links %}
+                                            <tr class="admin-link-row">
+                                                <td>
+                                                    <code class="fw-bold text-primary">{{ link.link_id }}</code>
+                                                </td>
+                                                <td>
+                                                    <span class="fw-semibold">@{{ link.bot_username or 'Unknown' }}</span>
+                                                    {% if not link.used %}
+                                                        <small class="text-success d-block">
+                                                            <i class="fas fa-check-circle me-1"></i>Active
+                                                        </small>
+                                                    {% endif %}
+                                                </td>
+                                                <td>
+                                                    <small>{{ link.created_at[:19].replace('T', ' ') if link.created_at else 'N/A' }}</small>
+                                                </td>
+                                                <td>
+                                                    {% if link.used %}
+                                                        <span class="badge badge-warning">
+                                                            <i class="fas fa-check me-1"></i>Used
+                                                        </span>
+                                                    {% else %}
+                                                        <span class="badge badge-success">
+                                                            <i class="fas fa-clock me-1"></i>Active
+                                                        </span>
+                                                    {% endif %}
+                                                </td>
+                                                <td>
+                                                    {% if link.messages %}
+                                                        <div class="message-preview">
+                                                            {% for msg in link.messages %}
+                                                                {% if msg %}
+                                                                    <div class="mb-1">
+                                                                        <i class="fas fa-comment-dots text-muted me-1"></i>
+                                                                        {{ msg[:40] }}{% if msg|length > 40 %}...{% endif %}
+                                                                    </div>
+                                                                {% endif %}
+                                                            {% endfor %}
+                                                        </div>
+                                                    {% else %}
+                                                        <small class="text-muted">
+                                                            <i class="fas fa-inbox me-1"></i>No messages
+                                                        </small>
+                                                    {% endif %}
+                                                </td>
+                                                <td>
+                                                    <div class="btn-group btn-group-sm">
+                                                        {% if not link.used %}
+                                                            <a href="/send/{{ link.link_id }}" 
+                                                               class="btn btn-outline-primary" 
+                                                               target="_blank" 
+                                                               data-bs-toggle="tooltip" 
+                                                               title="View link">
+                                                                <i class="fas fa-external-link-alt"></i>
+                                                            </a>
+                                                        {% endif %}
+                                                        <button class="btn btn-outline-info" 
+                                                                onclick="copyToClipboard('{{ request.host_url.rstrip('/') }}/send/{{ link.link_id }}')" 
+                                                                data-bs-toggle="tooltip" 
+                                                                title="Copy link">
+                                                            <i class="fas fa-copy"></i>
+                                                        </button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        {% else %}
+                            <div class="empty-state">
+                                <i class="fas fa-inbox empty-icon"></i>
+                                <h6>No Links Generated</h6>
+                                <p class="text-muted mb-3">This admin hasn't generated any message links yet.</p>
+                                <a href="/" class="btn btn-primary">
+                                    <i class="fas fa-plus me-2"></i>Generate First Link
+                                </a>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    {% else %}
+        <div class="empty-state" data-aos="fade-up">
+            <i class="fas fa-database empty-icon"></i>
+            <h4>No Data Available</h4>
+            <p class="text-muted mb-4">No Telegram message links have been generated yet.</p>
+            <div class="row g-3 justify-content-center">
+                <div class="col-md-6">
+                    <a href="/" class="btn btn-primary btn-lg w-100">
+                        <i class="fas fa-plus me-2"></i>Generate Your First Link
+                    </a>
+                </div>
+                <div class="col-md-6">
+                    <button class="btn btn-outline-secondary btn-lg w-100" onclick="refreshData()">
+                        <i class="fas fa-sync-alt me-2"></i>Refresh Dashboard
+                    </button>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+</div>
+
 <!-- Refresh Status Modal -->
 <div class="modal fade" id="refreshModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Data Refresh</h5>
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content glass-card">
+            <div class="modal-header border-0">
+                <h5 class="modal-title text-gradient">
+                    <i class="fas fa-sync-alt me-2"></i>Refreshing Dashboard
+                </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <div class="modal-body text-center">
-                <div class="spinner-border text-primary" role="status">
+            <div class="modal-body text-center py-4">
+                <div class="spinner-border text-primary mb-3" role="status" style="width: 3rem; height: 3rem;">
                     <span class="visually-hidden">Loading...</span>
                 </div>
-                <p class="mt-3">Refreshing dashboard data...</p>
+                <h6 class="mb-0">Updating dashboard data...</h6>
+                <small class="text-muted">Please wait while we refresh the latest information</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Print Report Modal -->
+<div class="modal fade" id="printModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-print me-2"></i>Generate Report
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Generate a comprehensive report of your Telegram links and activity.</p>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="includeStats" checked>
+                            <label class="form-check-label" for="includeStats">
+                                Include Statistics Overview
+                            </label>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="includeMessages" checked>
+                            <label class="form-check-label" for="includeMessages">
+                                Include Message Content
+                            </label>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="includeMetadata" checked>
+                            <label class="form-check-label" for="includeMetadata">
+                                Include Metadata (timestamps, etc.)
+                            </label>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="includeCharts">
+                            <label class="form-check-label" for="includeCharts">
+                                Include Charts & Visualizations
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="generatePrintReport()">
+                    <i class="fas fa-print me-2"></i>Generate & Print
+                </button>
             </div>
         </div>
     </div>
 </div>
 {% endblock %}
+{% endblock %}
 
 {% block extra_js %}
 <script>
-// Refresh dashboard data
+// Enhanced dashboard functionality
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize tooltips
+    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+
+    // Update last updated timestamp
+    updateTimestamp();
+    
+    // Initialize search
+    initializeSearch();
+    
+    // Setup keyboard shortcuts
+    setupKeyboardShortcuts();
+    
+    // Start auto-refresh timer
+    startAutoRefresh();
+});
+
+// Enhanced refresh function with loading state
 function refreshData() {
+    showToast('Refreshing dashboard data...', 'info');
+    
     const modal = new bootstrap.Modal(document.getElementById('refreshModal'));
     modal.show();
     
+    // Simulate refresh delay
     setTimeout(() => {
+        modal.hide();
+        showToast('Dashboard data refreshed successfully!', 'success');
+        updateTimestamp();
         window.location.reload();
-    }, 1500);
+    }, 2000);
 }
 
-// Export data functions
+// Enhanced export functionality
 function exportData(format) {
-    const data = {{ admin_data|tojson|safe }};
-    let content, filename, mimeType;
+    showLoading();
     
-    if (format === 'json') {
-        content = JSON.stringify(data, null, 2);
-        filename = 'telegram_links_data.json';
-        mimeType = 'application/json';
-    } else if (format === 'csv') {
-        // Convert to CSV
-        let csv = 'Admin ID,Link ID,Bot Username,Created At,Status,Message 1,Message 2\n';
+    try {
+        const data = {{ admin_data|tojson|safe }};
+        let content, filename, mimeType;
         
-        Object.keys(data).forEach(adminId => {
-            const admin = data[adminId];
-            if (admin.links) {
-                admin.links.forEach(link => {
-                    const messages = link.messages || ['', ''];
-                    csv += `${adminId},${link.link_id},"${link.bot_username}","${link.created_at || ''}",${link.used ? 'Used' : 'Active'},"${messages[0] || ''}","${messages[1] || ''}"\n`;
-                });
-            }
-        });
+        if (format === 'json') {
+            const exportData = {
+                exportDate: new Date().toISOString(),
+                statistics: {{ stats|tojson|safe }},
+                data: data
+            };
+            content = JSON.stringify(exportData, null, 2);
+            filename = `telegram_links_export_${new Date().toISOString().split('T')[0]}.json`;
+            mimeType = 'application/json';
+        } else if (format === 'csv') {
+            let csv = 'Admin ID,Link ID,Bot Username,Created At,Status,Message 1,Message 2,Timestamp\n';
+            
+            Object.keys(data).forEach(adminId => {
+                const admin = data[adminId];
+                if (admin.links) {
+                    admin.links.forEach(link => {
+                        const messages = link.messages || ['', ''];
+                        const timestamp = link.created_at ? new Date(link.created_at).toISOString() : '';
+                        csv += `"${adminId}","${link.link_id}","${link.bot_username || 'Unknown'}","${timestamp}","${link.used ? 'Used' : 'Active'}","${(messages[0] || '').replace(/"/g, '""')}","${(messages[1] || '').replace(/"/g, '""')}","${timestamp}"\n`;
+                    });
+                }
+            });
+            
+            content = csv;
+            filename = `telegram_links_export_${new Date().toISOString().split('T')[0]}.csv`;
+            mimeType = 'text/csv';
+        }
         
-        content = csv;
-        filename = 'telegram_links_data.csv';
-        mimeType = 'text/csv';
+        // Create and trigger download
+        const blob = new Blob([content], { type: mimeType });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        a.style.display = 'none';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        
+        showToast(`${format.toUpperCase()} export completed successfully!`, 'success');
+    } catch (error) {
+        console.error('Export error:', error);
+        showToast('Failed to export data. Please try again.', 'error');
+    } finally {
+        hideLoading();
     }
-    
-    // Create download
-    const blob = new Blob([content], { type: mimeType });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = filename;
-    a.click();
-    URL.revokeObjectURL(url);
 }
 
-// Auto-refresh every 5 minutes
-setInterval(() => {
-    if (document.visibilityState === 'visible') {
-        console.log('Auto-refreshing dashboard...');
-        refreshData();
+// Search functionality
+function initializeSearch() {
+    const searchInput = document.getElementById('searchInput');
+    if (searchInput) {
+        searchInput.addEventListener('input', debounce(function(e) {
+            const searchTerm = e.target.value.toLowerCase().trim();
+            const adminSections = document.querySelectorAll('.admin-section');
+            
+            adminSections.forEach(section => {
+                const text = section.textContent.toLowerCase();
+                const shouldShow = !searchTerm || text.includes(searchTerm);
+                section.style.display = shouldShow ? '' : 'none';
+            });
+            
+            // Update result count
+            updateSearchResults(searchInput, adminSections);
+        }, 300));
     }
-}, 5 * 60 * 1000);
+}
 
-// Keyboard shortcuts
-document.addEventListener('keydown', function(e) {
-    // Ctrl+R or F5 for refresh
-    if ((e.ctrlKey && e.key === 'r') || e.key === 'F5') {
-        e.preventDefault();
-        refreshData();
+function clearSearch() {
+    const searchInput = document.getElementById('searchInput');
+    if (searchInput) {
+        searchInput.value = '';
+        searchInput.dispatchEvent(new Event('input'));
+        searchInput.focus();
     }
-});
+}
 
-// Search functionality (if needed for large datasets)
-function searchData() {
-    const searchTerm = prompt('Search links by Admin ID, Link ID, or Bot Username:');
-    if (searchTerm) {
-        // Simple search implementation
-        const cards = document.querySelectorAll('.admin-section');
-        cards.forEach(card => {
-            const text = card.textContent.toLowerCase();
-            if (text.includes(searchTerm.toLowerCase())) {
-                card.style.display = '';
-            } else {
-                card.style.display = 'none';
+function updateSearchResults(searchInput, adminSections) {
+    const searchTerm = searchInput.value.toLowerCase().trim();
+    const visibleSections = Array.from(adminSections).filter(section => 
+        section.style.display !== 'none'
+    ).length;
+    
+    if (searchTerm && visibleSections === 0) {
+        showToast('No results found for your search.', 'warning');
+    }
+}
+
+// Additional admin functions
+function viewAdminDetails(adminId) {
+    showToast(`Loading details for admin ${adminId}...`, 'info');
+    // Implementation would go here for detailed admin view
+}
+
+function copyAdminLinks(adminId) {
+    showLoading();
+    
+    try {
+        const data = {{ admin_data|tojson|safe }};
+        const admin = data[adminId];
+        if (admin && admin.links) {
+            const links = admin.links.map(link => 
+                `${request.host_url.rstrip('/')}/send/${link.link_id}`
+            ).join('\n');
+            
+            copyToClipboard(links);
+            showToast(`Copied ${links.split('\n').length} links for admin ${adminId}`, 'success');
+        }
+    } catch (error) {
+        console.error('Copy error:', error);
+        showToast('Failed to copy admin links', 'error');
+    } finally {
+        hideLoading();
+    }
+}
+
+function printReport() {
+    const modal = new bootstrap.Modal(document.getElementById('printModal'));
+    modal.show();
+}
+
+function generatePrintReport() {
+    const includeStats = document.getElementById('includeStats').checked;
+    const includeMessages = document.getElementById('includeMessages').checked;
+    const includeMetadata = document.getElementById('includeMetadata').checked;
+    const includeCharts = document.getElementById('includeCharts').checked;
+    
+    // Close modal and generate report
+    const modal = bootstrap.Modal.getInstance(document.getElementById('printModal'));
+    modal.hide();
+    
+    showLoading();
+    
+    setTimeout(() => {
+        window.print();
+        hideLoading();
+        showToast('Report generated successfully!', 'success');
+    }, 1000);
+}
+
+// Utility functions
+function updateTimestamp() {
+    const timestampElement = document.getElementById('lastUpdate');
+    if (timestampElement) {
+        const now = new Date();
+        timestampElement.textContent = now.toLocaleTimeString();
+    }
+}
+
+function startAutoRefresh() {
+    // Auto-refresh every 5 minutes (reduced from 1 minute)
+    setInterval(() => {
+        if (document.visibilityState === 'visible') {
+            console.log('Auto-refreshing dashboard...');
+            refreshData();
+        }
+    }, 5 * 60 * 1000);
+}
+
+function setupKeyboardShortcuts() {
+    document.addEventListener('keydown', function(e) {
+        // Ctrl+R or F5 for refresh
+        if ((e.ctrlKey && e.key === 'r') || e.key === 'F5') {
+            e.preventDefault();
+            refreshData();
+        }
+        
+        // Ctrl+F for search
+        if (e.ctrlKey && e.key === 'f') {
+            e.preventDefault();
+            const searchInput = document.getElementById('searchInput');
+            if (searchInput) {
+                searchInput.focus();
             }
-        });
-    }
+        }
+        
+        // Escape to clear search
+        if (e.key === 'Escape') {
+            clearSearch();
+        }
+    });
+}
+
+// Debounce function for search
+function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+        const later = () => {
+            clearTimeout(timeout);
+            func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+    };
 }
 
 // Page visibility change handler
 document.addEventListener('visibilitychange', function() {
     if (document.visibilityState === 'visible') {
-        // Page became visible, update timestamp
-        console.log('Dashboard became visible');
+        updateTimestamp();
+        console.log('Dashboard became visible - updating data');
     }
+});
+
+// Session timeout handling
+let sessionTimeout;
+function resetSessionTimer() {
+    clearTimeout(sessionTimeout);
+    sessionTimeout = setTimeout(() => {
+        showToast('Your session will expire in 2 minutes. Please save your work.', 'warning');
+    }, 28 * 60 * 1000); // 28 minutes
+}
+
+// Reset timer on user activity
+['click', 'keypress', 'scroll', 'mousemove'].forEach(event => {
+    document.addEventListener(event, resetSessionTimer, { passive: true });
+});
+
+// Initialize session timer
+resetSessionTimer();
+
+// Add smooth scrolling for anchor links
+document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+    anchor.addEventListener('click', function (e) {
+        e.preventDefault();
+        const target = document.querySelector(this.getAttribute('href'));
+        if (target) {
+            target.scrollIntoView({
+                behavior: 'smooth',
+                block: 'start'
+            });
+        }
+    });
+});
+
+// Add loading animation to buttons
+document.querySelectorAll('.btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+        if (!this.disabled && !this.classList.contains('no-loading')) {
+            const originalHTML = this.innerHTML;
+            this.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+            this.disabled = true;
+            
+            setTimeout(() => {
+                this.innerHTML = originalHTML;
+                this.disabled = false;
+            }, 1000);
+        }
+    });
 });
 </script>
 {% endblock %}

@@ -1,110 +1,374 @@
 {% extends "base.html" %}
 
-{% block title %}Admin Login{% endblock %}
+{% block title %}Admin Login - Premium Security{% endblock %}
+
+{% block extra_css %}
+<style>
+    .login-container {
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .login-container::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+        animation: rotate 25s linear infinite;
+    }
+
+    @keyframes rotate {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+    }
+
+    .login-card {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        border-radius: 24px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+        padding: 3rem;
+        position: relative;
+        z-index: 2;
+        max-width: 450px;
+        width: 100%;
+        margin: 2rem;
+    }
+
+    .login-header {
+        text-align: center;
+        margin-bottom: 3rem;
+    }
+
+    .login-icon {
+        width: 80px;
+        height: 80px;
+        background: var(--primary-gradient);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1.5rem;
+        box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+    }
+
+    .login-icon i {
+        font-size: 2rem;
+        color: white;
+    }
+
+    .form-floating > .form-control {
+        border-radius: 12px;
+        border: 2px solid #e3f2fd;
+        background: rgba(255, 255, 255, 0.9);
+        transition: all 0.3s ease;
+        padding: 1rem 1.25rem;
+        height: auto;
+    }
+
+    .form-floating > .form-control:focus {
+        border-color: #667eea;
+        box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+        background: rgba(255, 255, 255, 1);
+    }
+
+    .form-floating > label {
+        color: #6c757d;
+        font-weight: 500;
+    }
+
+    .input-group-text {
+        background: rgba(255, 255, 255, 0.9);
+        border: 2px solid #e3f2fd;
+        border-left: none;
+        border-radius: 0 12px 12px 0;
+    }
+
+    .input-group .form-control {
+        border-right: none;
+        border-radius: 12px 0 0 12px;
+    }
+
+    .input-group .form-control:focus {
+        border-right: none;
+    }
+
+    .credentials-card {
+        background: rgba(255, 243, 228, 0.8);
+        border: 2px solid #ffcc02;
+        border-radius: 16px;
+        backdrop-filter: blur(10px);
+        transition: all 0.3s ease;
+    }
+
+    .credentials-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 30px rgba(255, 204, 2, 0.3);
+    }
+
+    .security-badge {
+        display: inline-flex;
+        align-items: center;
+        background: rgba(76, 175, 80, 0.1);
+        color: #4caf50;
+        padding: 0.5rem 1rem;
+        border-radius: 50px;
+        font-size: 0.875rem;
+        font-weight: 600;
+        margin-top: 1rem;
+    }
+
+    .demo-credentials {
+        background: linear-gradient(135deg, #e3f2fd, #f3e5f5);
+        border: 2px dashed #667eea;
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-top: 1.5rem;
+        position: relative;
+    }
+
+    .demo-credentials::before {
+        content: '💡 Demo';
+        position: absolute;
+        top: -10px;
+        left: 15px;
+        background: #667eea;
+        color: white;
+        padding: 0.25rem 0.75rem;
+        border-radius: 12px;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+
+    .demo-credentials strong {
+        color: #667eea;
+    }
+
+    .quick-login {
+        background: var(--success-gradient);
+        color: white;
+        border: none;
+        border-radius: 12px;
+        padding: 0.75rem 2rem;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(79, 172, 254, 0.4);
+    }
+
+    .quick-login:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(79, 172, 254, 0.6);
+        color: white;
+    }
+
+    .features-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .features-list li {
+        display: flex;
+        align-items: center;
+        padding: 0.75rem 0;
+        color: #495057;
+    }
+
+    .features-list li i {
+        color: #4caf50;
+        margin-right: 1rem;
+        width: 20px;
+    }
+
+    .security-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 1rem;
+        margin-top: 1.5rem;
+    }
+
+    .security-item {
+        text-align: center;
+        padding: 1rem;
+        background: rgba(255, 255, 255, 0.7);
+        border-radius: 12px;
+        border: 1px solid rgba(102, 126, 234, 0.2);
+        transition: all 0.3s ease;
+    }
+
+    .security-item:hover {
+        background: rgba(255, 255, 255, 0.9);
+        transform: translateY(-2px);
+    }
+
+    .security-item i {
+        font-size: 1.5rem;
+        color: #667eea;
+        margin-bottom: 0.5rem;
+    }
+
+    .security-item small {
+        color: #6c757d;
+        font-weight: 600;
+    }
+
+    @media (max-width: 768px) {
+        .login-card {
+            padding: 2rem;
+            margin: 1rem;
+        }
+        
+        .login-icon {
+            width: 60px;
+            height: 60px;
+        }
+        
+        .login-icon i {
+            font-size: 1.5rem;
+        }
+        
+        .security-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="container">
-    <div class="row justify-content-center">
-        <div class="col-lg-6">
-            <div class="card">
-                <div class="card-header bg-dark text-white text-center">
-                    <h3 class="mb-0">
-                        <i class="fas fa-user-shield"></i> Admin Login
-                    </h3>
-                </div>
-                <div class="card-body p-4">
-                    <div class="text-center mb-4">
-                        <i class="fas fa-lock text-dark" style="font-size: 4rem;"></i>
-                        <p class="text-muted mt-3">
-                            Please enter your admin credentials to access the dashboard.
-                        </p>
+<div class="login-container">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-5 col-md-7">
+                <div class="login-card" data-aos="zoom-in">
+                    <div class="login-header">
+                        <div class="login-icon" data-aos="bounce">
+                            <i class="fas fa-shield-alt"></i>
+                        </div>
+                        <h2 class="text-gradient mb-2">Secure Admin Access</h2>
+                        <p class="text-muted mb-0">Please authenticate to access the admin dashboard</p>
                     </div>
                     
                     <form method="POST" action="/admin/login" id="adminForm">
-                        <div class="mb-4">
-                            <label for="username" class="form-label fw-bold">
-                                <i class="fas fa-user text-primary"></i> Username
-                            </label>
-                            <input type="text" 
-                                   class="form-control" 
-                                   id="username" 
-                                   name="username" 
-                                   placeholder="Enter username"
-                                   required 
-                                   autofocus>
-                        </div>
-                        
-                        <div class="mb-4">
-                            <label for="password" class="form-label fw-bold">
-                                <i class="fas fa-key text-success"></i> Password
-                            </label>
-                            <div class="input-group">
-                                <input type="password" 
-                                       class="form-control" 
-                                       id="password" 
-                                       name="password" 
-                                       placeholder="Enter password"
-                                       required>
-                                <button class="btn btn-outline-secondary" 
-                                        type="button" 
-                                        id="togglePassword">
-                                    <i class="fas fa-eye" id="eyeIcon"></i>
+                        <div class="row g-3">
+                            <div class="col-12">
+                                <div class="form-floating">
+                                    <input type="text" 
+                                           class="form-control" 
+                                           id="username" 
+                                           name="username" 
+                                           placeholder="Username"
+                                           required 
+                                           autofocus>
+                                    <label for="username">
+                                        <i class="fas fa-user me-2"></i>Username
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <div class="col-12">
+                                <div class="form-floating">
+                                    <input type="password" 
+                                           class="form-control" 
+                                           id="password" 
+                                           name="password" 
+                                           placeholder="Password"
+                                           required>
+                                    <label for="password">
+                                        <i class="fas fa-lock me-2"></i>Password
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <div class="col-12">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="rememberMe">
+                                    <label class="form-check-label" for="rememberMe">
+                                        Keep me signed in (30 minutes)
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <div class="col-12">
+                                <button type="submit" class="btn btn-primary w-100 btn-lg" id="loginBtn">
+                                    <i class="fas fa-sign-in-alt me-2"></i>Login to Dashboard
                                 </button>
                             </div>
                         </div>
-                        
-                        <div class="mb-4 form-check">
-                            <input type="checkbox" class="form-check-input" id="rememberMe">
-                            <label class="form-check-label" for="rememberMe">
-                                Remember me for this session
-                            </label>
-                        </div>
-                        
-                        <div class="d-grid">
-                            <button type="submit" class="btn btn-primary btn-lg" id="loginBtn">
-                                <i class="fas fa-sign-in-alt"></i> Login
+                    </form>
+                    
+                    <div class="demo-credentials">
+                        <div class="text-center">
+                            <h6 class="text-dark mb-3">
+                                <i class="fas fa-key me-2"></i>Demo Credentials
+                            </h6>
+                            <div class="row g-2">
+                                <div class="col-6">
+                                    <small><strong>Username:</strong></small>
+                                    <div class="fw-bold text-primary">mk</div>
+                                </div>
+                                <div class="col-6">
+                                    <small><strong>Password:</strong></small>
+                                    <div class="fw-bold text-success">mk123</div>
+                                </div>
+                            </div>
+                            <button type="button" class="btn quick-login btn-sm mt-3" onclick="fillDemoCredentials()">
+                                <i class="fas fa-magic me-2"></i>Auto-Fill
                             </button>
                         </div>
-                    </form>
+                    </div>
+                    
+                    <div class="security-badge">
+                        <i class="fas fa-certificate me-2"></i>Enterprise-Grade Security
+                    </div>
                 </div>
-            </div>
-            
-            <!-- Default Credentials Info -->
-            <div class="card mt-4 border-info">
-                <div class="card-header bg-info text-white">
-                    <h6 class="mb-0">
-                        <i class="fas fa-info-circle"></i> Default Credentials
-                    </h6>
-                </div>
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-6">
-                            <p class="mb-2"><strong>Username:</strong> mk</p>
-                            <p class="mb-0"><strong>Password:</strong> mk123</p>
+                
+                <!-- Security Features -->
+                <div class="credentials-card mt-4 p-4" data-aos="fade-up" data-aos-delay="200">
+                    <div class="text-center mb-4">
+                        <h6 class="text-dark mb-0">
+                            <i class="fas fa-shield-alt text-warning me-2"></i>Security Features
+                        </h6>
+                    </div>
+                    
+                    <div class="security-grid">
+                        <div class="security-item">
+                            <i class="fas fa-clock"></i>
+                            <div><small>30min Session</small></div>
                         </div>
-                        <div class="col-md-6">
-                            <p class="mb-0 text-muted">
-                                <i class="fas fa-shield-alt"></i> 
-                                Credentials should be changed in production
-                            </p>
+                        <div class="security-item">
+                            <i class="fas fa-file-alt"></i>
+                            <div><small>Activity Logs</small></div>
+                        </div>
+                        <div class="security-item">
+                            <i class="fas fa-lock"></i>
+                            <div><small>Secure Login</small></div>
+                        </div>
+                        <div class="security-item">
+                            <i class="fas fa-server"></i>
+                            <div><small>Encrypted Data</small></div>
                         </div>
                     </div>
                 </div>
-            </div>
-            
-            <!-- Security Notice -->
-            <div class="card mt-4 border-warning">
-                <div class="card-header bg-warning">
-                    <h6 class="mb-0">
-                        <i class="fas fa-exclamation-triangle"></i> Security Notice
+                
+                <!-- Additional Info -->
+                <div class="credentials-card mt-4 p-4" data-aos="fade-up" data-aos-delay="400">
+                    <h6 class="text-dark mb-3">
+                        <i class="fas fa-info-circle text-info me-2"></i>System Information
                     </h6>
-                </div>
-                <div class="card-body">
-                    <ul class="mb-0">
-                        <li>Session expires after 30 minutes of inactivity</li>
-                        <li>All activities are logged for security purposes</li>
-                        <li>Change default credentials in production</li>
-                        <li>Use strong, unique passwords</li>
+                    <ul class="features-list">
+                        <li><i class="fas fa-check-circle"></i>Session-based authentication</li>
+                        <li><i class="fas fa-check-circle"></i>Automatic logout on inactivity</li>
+                        <li><i class="fas fa-check-circle"></i>Secure data handling</li>
+                        <li><i class="fas fa-check-circle"></i>Admin activity monitoring</li>
                     </ul>
                 </div>
             </div>
@@ -115,73 +379,174 @@
 
 {% block extra_js %}
 <script>
-// Toggle password visibility
-document.getElementById('togglePassword').addEventListener('click', function() {
-    const password = document.getElementById('password');
-    const eyeIcon = document.getElementById('eyeIcon');
-    
-    if (password.type === 'password') {
-        password.type = 'text';
-        eyeIcon.className = 'fas fa-eye-slash';
-    } else {
-        password.type = 'password';
-        eyeIcon.className = 'fas fa-eye';
-    }
-});
-
-// Form submission
+// Enhanced admin form handling
 document.getElementById('adminForm').addEventListener('submit', function(e) {
     const loginBtn = document.getElementById('loginBtn');
+    const form = this;
     
     // Show loading state
-    loginBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Authenticating...';
+    loginBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Authenticating...';
     loginBtn.disabled = true;
-});
-
-// Auto-fill demo credentials
-document.addEventListener('DOMContentLoaded', function() {
-    // Auto-fill default credentials for demo purposes
-    const username = document.getElementById('username');
-    const password = document.getElementById('password');
     
-    // Focus on username field
-    if (!username.value) {
-        username.focus();
+    // Basic form validation
+    const username = document.getElementById('username').value.trim();
+    const password = document.getElementById('password').value.trim();
+    
+    if (!username || !password) {
+        e.preventDefault();
+        showToast('Please fill in all required fields', 'error');
+        resetButton();
+        return;
     }
     
-    // Add helpful placeholder text
-    username.placeholder = 'Username: mk';
-    password.placeholder = 'Password: mk123';
+    if (username.length < 2) {
+        e.preventDefault();
+        showToast('Username must be at least 2 characters', 'error');
+        resetButton();
+        return;
+    }
+    
+    // Visual feedback
+    setTimeout(() => {
+        if (loginBtn.disabled) {
+            resetButton();
+        }
+    }, 10000); // Fallback reset
 });
 
-// Session timeout warning
-let sessionTimeout;
-let warningTimeout;
-
-function resetSessionTimer() {
-    clearTimeout(sessionTimeout);
-    clearTimeout(warningTimeout);
-    
-    // Show warning at 25 minutes
-    warningTimeout = setTimeout(() => {
-        if (confirm('Your session will expire in 5 minutes. Do you want to extend it?')) {
-            resetSessionTimer();
-        }
-    }, 25 * 60 * 1000); // 25 minutes
-    
-    // Auto-logout at 30 minutes
-    sessionTimeout = setTimeout(() => {
-        alert('Your session has expired. You will be redirected to login.');
-        window.location.href = '/admin';
-    }, 30 * 60 * 1000); // 30 minutes
+function resetButton() {
+    const loginBtn = document.getElementById('loginBtn');
+    loginBtn.disabled = false;
+    loginBtn.innerHTML = '<i class="fas fa-sign-in-alt me-2"></i>Login to Dashboard';
 }
 
-// Start session timer
-resetSessionTimer();
+function fillDemoCredentials() {
+    document.getElementById('username').value = 'mk';
+    document.getElementById('password').value = 'mk123';
+    
+    // Visual feedback
+    showToast('Demo credentials filled successfully!', 'success');
+    
+    // Add some animation
+    const usernameField = document.getElementById('username');
+    const passwordField = document.getElementById('password');
+    
+    usernameField.style.background = 'rgba(76, 175, 80, 0.1)';
+    passwordField.style.background = 'rgba(76, 175, 80, 0.1)';
+    
+    setTimeout(() => {
+        usernameField.style.background = '';
+        passwordField.style.background = '';
+    }, 2000);
+}
 
-// Reset timer on user activity
-['click', 'keypress', 'scroll', 'mousemove'].forEach(event => {
-    document.addEventListener(event, resetSessionTimer, { passive: true });
+// Enhanced keyboard navigation
+document.addEventListener('DOMContentLoaded', function() {
+    const usernameField = document.getElementById('username');
+    const passwordField = document.getElementById('password');
+    
+    // Enter key navigation
+    usernameField.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            passwordField.focus();
+        }
+    });
+    
+    passwordField.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            document.getElementById('adminForm').submit();
+        }
+    });
+    
+    // Auto-focus first field
+    if (usernameField.value === '') {
+        usernameField.focus();
+    }
+    
+    // Add floating label animation
+    const inputs = document.querySelectorAll('.form-control');
+    inputs.forEach(input => {
+        input.addEventListener('focus', function() {
+            this.parentElement.classList.add('focused');
+        });
+        
+        input.addEventListener('blur', function() {
+            if (!this.value) {
+                this.parentElement.classList.remove('focused');
+            }
+        });
+    });
 });
+
+// Security enhancements
+let sessionActivity = Date.now();
+
+function updateActivity() {
+    sessionActivity = Date.now();
+}
+
+// Track user activity
+document.addEventListener('mousemove', updateActivity);
+document.addEventListener('keypress', updateActivity);
+document.addEventListener('click', updateActivity);
+
+// Session timeout warning
+setInterval(() => {
+    const now = Date.now();
+    const timeInactive = now - sessionActivity;
+    
+    // Warn at 25 minutes
+    if (timeInactive > 25 * 60 * 1000 && timeInactive < 30 * 60 * 1000) {
+        showToast('Your session will expire soon. Please save your work.', 'warning');
+    }
+    
+    // Auto-logout at 30 minutes
+    if (timeInactive > 30 * 60 * 1000) {
+        showToast('Your session has expired. Please login again.', 'error');
+        setTimeout(() => {
+            window.location.href = '/admin';
+        }, 3000);
+    }
+}, 60000); // Check every minute
+
+// Add smooth transitions for better UX
+const style = document.createElement('style');
+style.textContent = `
+    .form-floating.focused .form-control {
+        background: rgba(255, 255, 255, 1) !important;
+        transform: scale(1.02);
+    }
+    
+    .demo-credentials {
+        animation: fadeInUp 0.6s ease-out;
+    }
+    
+    @keyframes fadeInUp {
+        from { 
+            opacity: 0; 
+            transform: translateY(20px); 
+        }
+        to { 
+            opacity: 1; 
+            transform: translateY(0); 
+        }
+    }
+    
+    .login-card {
+        animation: floatIn 0.8s ease-out;
+    }
+    
+    @keyframes floatIn {
+        from { 
+            opacity: 0; 
+            transform: translateY(50px) scale(0.95); 
+        }
+        to { 
+            opacity: 1; 
+            transform: translateY(0) scale(1); 
+        }
+    }
+`;
+document.head.appendChild(style);
 </script>
 {% endblock %}

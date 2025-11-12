@@ -108,8 +108,8 @@
                     <div class="row">
                         <div class="col-md-6">
                             <p><strong>Error Type:</strong> Internal Server Error (500)</p>
-                            <p><strong>Timestamp:</strong> <span id="timestamp">{{ "now"|datetime }}</span></p>
-                            <p><strong>Request ID:</strong> {{ "random"|uuid }}</p>
+                            <p><strong>Timestamp:</strong> <span id="timestamp"></span></p>
+                            <p><strong>Request ID:</strong> <span id="request-id"></span></p>
                         </div>
                         <div class="col-md-6">
                             <p><strong>Status:</strong> The issue has been logged</p>
@@ -126,8 +126,9 @@
 
 {% block extra_js %}
 <script>
-// Set current timestamp
-document.getElementById('timestamp').textContent = new Date().toISOString();
+// Set current timestamp and request ID
+document.getElementById('timestamp').textContent = new Date().toLocaleString();
+document.getElementById('request-id').textContent = 'ERR-' + Math.random().toString(36).substr(2, 9).toUpperCase();
 
 // Error reporting function
 function reportError() {
