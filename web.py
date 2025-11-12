@@ -1,6 +1,6 @@
 from flask import Flask, render_template_string, request
 from tgbot import send_message_to_admin
-import random, string
+import random, string, os
 
 app = Flask(__name__)
 
@@ -70,11 +70,14 @@ def generate_link(info):
     Example: /link/{admin_id}{bot_token}
     Generates a unique message-sending link
     """
-    # Separate admin_id and bot_token by assuming admin_id is numeric
+    # Extract admin_id (digits only) and bot_token (rest)
     admin_id = ''.join([c for c in info if c.isdigit()])
     bot_token = info.replace(admin_id, '')
 
-    # Generate random 8-char key
+    if not admin_id or not bot_token:
+        return {"status": "error", "message": "Invalid format. Use /link/{admin_id}{bot_token}"}, 400
+
+    # Generate random key for this link
     key = ''.join(random.choices(string.ascii_letters + string.digits, k=8))
     BOT_LINKS[key] = {"admin": admin_id, "token": bot_token}
 
@@ -108,9 +111,8 @@ def send_page(key):
     return render_template_string(SEND_HTML, message=message)
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000)    {% endif %}
-</body>
-</html>
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port)</html>
 """
 
 @app.route("/", methods=["GET", "POST"])
