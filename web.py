@@ -1,66 +1,13 @@
-from flask import Flask, render_template_string, request, redirect, url_for
+from flask import Flask, render_template_string, request
 from tgbot import send_message_to_admin
 import random, string
 
 app = Flask(__name__)
 
-# Temporary storage for bot credentials
-BOT_DATA = {}
+# Store generated links temporarily (in memory)
+BOT_LINKS = {}
 
-# HTML templates
-HOME_HTML = """
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Bot Link Generator</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background: linear-gradient(135deg, #141E30, #243B55);
-            color: white;
-            text-align: center;
-            padding-top: 100px;
-        }
-        form {
-            background: rgba(255,255,255,0.1);
-            padding: 30px;
-            border-radius: 15px;
-            display: inline-block;
-            box-shadow: 0 0 15px rgba(0,0,0,0.3);
-        }
-        input {
-            padding: 10px;
-            margin: 10px;
-            border: none;
-            border-radius: 10px;
-            width: 250px;
-        }
-        button {
-            padding: 10px 25px;
-            border: none;
-            border-radius: 10px;
-            background-color: #00c853;
-            color: white;
-            cursor: pointer;
-        }
-        button:hover { background-color: #009624; }
-    </style>
-</head>
-<body>
-    <h1>Generate Telegram Message Sender Link</h1>
-    <form method="POST">
-        <input type="text" name="bot_token" placeholder="Enter Bot Token" required><br>
-        <input type="text" name="admin_id" placeholder="Enter Admin ID" required><br>
-        <button type="submit">Generate Link</button>
-    </form>
-    {% if link %}
-        <h3>Your Unique Link:</h3>
-        <p><a href="{{ link }}" target="_blank" style="color: #00e676;">{{ link }}</a></p>
-    {% endif %}
-</body>
-</html>
-"""
-
+# HTML Template for message sending page
 SEND_HTML = """
 <!DOCTYPE html>
 <html>
@@ -69,10 +16,10 @@ SEND_HTML = """
     <style>
         body {
             font-family: Arial, sans-serif;
-            background: linear-gradient(135deg, #0F2027, #203A43, #2C5364);
+            background: linear-gradient(135deg, #141E30, #243B55);
             color: white;
             text-align: center;
-            padding-top: 100px;
+            padding-top: 80px;
         }
         form {
             background: rgba(255,255,255,0.1);
@@ -81,16 +28,15 @@ SEND_HTML = """
             display: inline-block;
             box-shadow: 0 0 15px rgba(0,0,0,0.3);
         }
-        textarea {
+        input, textarea {
             width: 300px;
-            height: 100px;
-            border-radius: 10px;
             padding: 10px;
+            margin: 10px;
+            border-radius: 10px;
             border: none;
             resize: none;
         }
         button {
-            margin-top: 10px;
             padding: 10px 25px;
             border: none;
             border-radius: 10px;
@@ -98,18 +44,71 @@ SEND_HTML = """
             color: white;
             cursor: pointer;
         }
-        button:hover { background-color: #009624; }
+        button:hover {
+            background-color: #009624;
+        }
     </style>
 </head>
 <body>
-    <h1>Send Message to Admin</h1>
+    <h1>Send Messages to Admin</h1>
     <form method="POST">
-        <textarea name="message" placeholder="Enter your message..." required></textarea><br>
-        <button type="submit">Send Message</button>
+        <textarea name="msg1" placeholder="Enter Message 1..." required></textarea><br>
+        <textarea name="msg2" placeholder="Enter Message 2..." required></textarea><br>
+        <button type="submit">Send Both Messages</button>
     </form>
     {% if message %}
         <h3>{{ message }}</h3>
     {% endif %}
+</body>
+</html>
+"""
+
+@app.route("/link/<path:info>")
+def generate_link(info):
+    """
+    API Endpoint:
+    Example: /link/{admin_id}{bot_token}
+    Generates a unique message-sending link
+    """
+    # Separate admin_id and bot_token by assuming admin_id is numeric
+    admin_id = ''.join([c for c in info if c.isdigit()])
+    bot_token = info.replace(admin_id, '')
+
+    # Generate random 8-char key
+    key = ''.join(random.choices(string.ascii_letters + string.digits, k=8))
+    BOT_LINKS[key] = {"admin": admin_id, "token": bot_token}
+
+    full_link = request.url_root.strip("/") + f"/send/{key}"
+    return {
+        "status": "success",
+        "message": "Link generated successfully!",
+        "generated_link": full_link
+    }
+
+@app.route("/send/<key>", methods=["GET", "POST"])
+def send_page(key):
+    if key not in BOT_LINKS:
+        return "<h3 style='color:red;text-align:center'>Invalid or expired link ❌</h3>"
+
+    creds = BOT_LINKS[key]
+    message = None
+
+    if request.method == "POST":
+        msg1 = request.form.get("msg1")
+        msg2 = request.form.get("msg2")
+
+        ok1 = send_message_to_admin(creds["token"], creds["admin"], msg1)
+        ok2 = send_message_to_admin(creds["token"], creds["admin"], msg2)
+
+        if ok1 and ok2:
+            message = "✅ Both messages sent successfully!"
+        else:
+            message = "❌ Failed to send one or both messages."
+
+    return render_template_string(SEND_HTML, message=message)
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=5000)    {% endif %}
 </body>
 </html>
 """
