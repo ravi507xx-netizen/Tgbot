@@ -19,7 +19,8 @@ from werkzeug.utils import secure_filename
 # Add current directory to Python path
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
-app = Flask(__name__)
+# Configure Flask to use templates from current directory
+app = Flask(__name__, template_folder='templates')
 app.secret_key = os.environ.get('SECRET_KEY', secrets.token_hex(32))
 
 # Configuration
