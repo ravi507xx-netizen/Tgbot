@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-Production-ready Flask web application for Telegram message link generation
-Compatible with Render.com free deployment
+Fixed Flask application for Telegram message link generation
+Prevents redirect loops and handles errors properly
 """
 
 import os
@@ -24,11 +24,9 @@ app = Flask(__name__, template_folder='templates')
 app.secret_key = os.environ.get('SECRET_KEY', secrets.token_hex(32))
 
 # Configuration
-UPLOAD_FOLDER = '/tmp'
-ALLOWED_EXTENSIONS = {'txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif'}
-
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
+app.config['SESSION_COOKIE_SECURE'] = False  # For development
+app.config['SESSION_COOKIE_HTTPONLY'] = True
+app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(hours=24)
 
 # In-memory storage for demonstration (use database in production)
 generated_links = {}  # Store active links
@@ -66,23 +64,43 @@ class TelegramBot:
             print(f"Error getting bot info: {e}")
             return None
 
-def allowed_file(filename):
-    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+def is_admin_logged_in():
+    """Check if admin is logged in with better error handling"""
+    try:
+        return session.get('admin_logged_in') is True
+    except:
+        return False
 
 # Routes
 @app.route('/')
 def home():
     """Home page with form to generate links"""
-    if 'admin_logged_in' in session and session['admin_logged_in']:
-        return redirect(url_for('admin_dashboard'))
-    
-    stats = {
-        'total_links': len([link for link in generated_links.values() if not link['used']]),
-        'total_messages': sum(len(link.get('sent_messages', [])) for link in generated_links.values()),
-        'active_admins': len(set(link['admin_id'] for link in generated_links.values()))
-    }
-    
-    return render_template('home_simple.html', stats=stats)
+    try:
+        stats = {
+            'total_links': 0,
+            'total_messages': 0,
+            'active_admins': 0
+        }
+        
+        # Safe calculation of statistics
+        if generated_links:
+            try:
+                total_links = len([link for link in generated_links.values() if isinstance(link, dict) and not link.get('used', False)])
+                total_messages = sum(len(link.get('sent_messages', [])) for link in generated_links.values() if isinstance(link, dict))
+                active_admins = len(set(link.get('admin_id', '') for link in generated_links.values() if isinstance(link, dict) and link.get('admin_id')))
+                
+                stats = {
+                    'total_links': total_links,
+                    'total_messages': total_messages,
+                    'active_admins': active_admins
+                }
+            except Exception as e:
+                print(f"Error calculating stats: {e}")
+        
+        return render_template('home_simple.html', stats=stats)
+    except Exception as e:
+        print(f"Home page error: {e}")
+        return render_template('home_simple.html', stats={'total_links': 0, 'total_messages': 0, 'active_admins': 0})
 
 @app.route('/generate_link', methods=['POST'])
 def generate_link():
@@ -297,7 +315,8 @@ def api_generate_link():
 @app.route('/admin')
 def admin_login():
     """Admin login page"""
-    if 'admin_logged_in' in session and session['admin_logged_in']:
+    # Check if already logged in and redirect to dashboard
+    if is_admin_logged_in():
         return redirect(url_for('admin_dashboard'))
     return render_template('admin_login_simple.html')
 
@@ -308,8 +327,10 @@ def admin_login_submit():
     password = request.form.get('password', '').strip()
     
     if username == 'mk' and password == 'mk123':
+        session.clear()  # Clear any existing session data
         session['admin_logged_in'] = True
         session['admin_username'] = username
+        session['login_time'] = datetime.now().isoformat()
         return redirect(url_for('admin_dashboard'))
     else:
         flash('Invalid credentials!', 'error')
@@ -319,21 +340,29 @@ def admin_login_submit():
 def admin_dashboard():
     """Admin dashboard to view all data"""
     try:
-        if 'admin_logged_in' not in session or not session['admin_logged_in']:
+        if not is_admin_logged_in():
             return redirect(url_for('admin_login'))
         
         # Calculate statistics with error handling
         try:
-            total_links = len([link for link in generated_links.values() if not link.get('used', False)])
-            total_used_links = len([link for link in generated_links.values() if link.get('used', False)])
-            total_messages = len([link for link in generated_links.values() if link.get('sent_messages', [])])
-            
-            stats = {
-                'total_links': total_links,
-                'total_used_links': total_used_links,
-                'total_messages': total_messages,
-                'active_admins': len(set(link['admin_id'] for link in generated_links.values() if link.get('admin_id')))
-            }
+            if generated_links:
+                total_links = len([link for link in generated_links.values() if isinstance(link, dict) and not link.get('used', False)])
+                total_used_links = len([link for link in generated_links.values() if isinstance(link, dict) and link.get('used', False)])
+                total_messages = len([link for link in generated_links.values() if isinstance(link, dict) and link.get('sent_messages', [])])
+                
+                stats = {
+                    'total_links': total_links,
+                    'total_used_links': total_used_links,
+                    'total_messages': total_messages,
+                    'active_admins': len(set(link.get('admin_id', '') for link in generated_links.values() if isinstance(link, dict) and link.get('admin_id')))
+                }
+            else:
+                stats = {
+                    'total_links': 0,
+                    'total_used_links': 0,
+                    'total_messages': 0,
+                    'active_admins': 0
+                }
         except Exception as stats_error:
             print(f"Stats calculation error: {stats_error}")
             stats = {
