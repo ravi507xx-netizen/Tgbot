@@ -94,8 +94,18 @@ def generate_link():
         flash('Bot Token and Admin ID are required!', 'error')
         return redirect(url_for('home'))
     
-    # Validate bot token format
-    if not bot_token.startswith(('1234567890:')):
+    # Validate bot token format (should be numbers:long_alphanumeric_string)
+    if ':' not in bot_token:
+        flash('Invalid bot token format! Must contain a colon (:)', 'error')
+        return redirect(url_for('home'))
+    
+    parts = bot_token.split(':', 1)
+    if len(parts) != 2:
+        flash('Invalid bot token format!', 'error')
+        return redirect(url_for('home'))
+    
+    # Check if first part is numbers and second part has reasonable length
+    if not parts[0].isdigit() or len(parts[1]) < 20:
         flash('Invalid bot token format!', 'error')
         return redirect(url_for('home'))
     
@@ -217,9 +227,17 @@ def api_generate_link():
         if not admin_id or not bot_token:
             return jsonify({'error': 'admin_id and token parameters are required'}), 400
         
-        # Validate bot token format
-        if not bot_token.startswith(('1234567890:')):
-            return jsonify({'error': 'Invalid bot token format'}), 400
+        # Validate bot token format (should be numbers:long_alphanumeric_string)
+        if ':' not in bot_token:
+            return jsonify({'error': 'Invalid bot token format! Must contain a colon (:)'}), 400
+        
+        parts = bot_token.split(':', 1)
+        if len(parts) != 2:
+            return jsonify({'error': 'Invalid bot token format!'}), 400
+        
+        # Check if first part is numbers and second part has reasonable length
+        if not parts[0].isdigit() or len(parts[1]) < 20:
+            return jsonify({'error': 'Invalid bot token format!'}), 400
         
         # Validate admin ID format
         if not admin_id.isdigit():
