@@ -2,149 +2,286 @@
 
 {% block title %}Generate Message Link{% endblock %}
 
+{% block extra_css %}
+<style>
+.instagram-container {
+    max-width: 450px;
+    margin: 0 auto;
+    background: #fff;
+    border: 1px solid #dbdbdb;
+    border-radius: 1px;
+    padding: 0;
+}
+
+.instagram-logo {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-weight: 300;
+    font-size: 24px;
+    color: #262626;
+    margin-bottom: 20px;
+    letter-spacing: 2px;
+}
+
+.instagram-stats {
+    display: flex;
+    justify-content: space-around;
+    background: #fff;
+    border: 1px solid #dbdbdb;
+    border-radius: 1px;
+    padding: 16px 0;
+    margin: 0 24px 20px;
+    text-align: center;
+}
+
+.stat-item {
+    display: flex;
+    flex-direction: column;
+}
+
+.stat-number {
+    font-weight: 600;
+    font-size: 18px;
+    color: #262626;
+    margin-bottom: 2px;
+}
+
+.stat-label {
+    font-size: 12px;
+    color: #8e8e8e;
+    font-weight: 400;
+}
+
+.instagram-form {
+    padding: 24px;
+    background: #fff;
+    border: 1px solid #dbdbdb;
+    border-radius: 1px;
+    margin: 0 0 10px;
+}
+
+.form-floating > .form-control {
+    border: 1px solid #dbdbdb;
+    border-radius: 3px;
+    padding: 12px 8px 8px;
+    background: #fafafa;
+    font-size: 12px;
+    color: #262626;
+    margin-bottom: 10px;
+}
+
+.form-floating > .form-control:focus {
+    border: 1px solid #8e8e8e;
+    box-shadow: none;
+    background: #fff;
+}
+
+.form-floating > label {
+    color: #8e8e8e;
+    font-size: 12px;
+    padding: 8px;
+}
+
+.btn-instagram {
+    background: #0095f6;
+    border: 1px solid #0095f6;
+    border-radius: 8px;
+    padding: 8px 0;
+    font-size: 14px;
+    font-weight: 600;
+    color: white;
+    width: 100%;
+    margin-top: 8px;
+}
+
+.btn-instagram:hover {
+    background: #1877f2;
+    border-color: #1877f2;
+    color: white;
+}
+
+.btn-instagram:disabled {
+    opacity: 0.5;
+}
+
+.instagram-divider {
+    display: flex;
+    align-items: center;
+    margin: 10px 0 10px;
+    color: #8e8e8e;
+    font-size: 13px;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.instagram-divider::before,
+.instagram-divider::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: #dbdbdb;
+}
+
+.instagram-divider::before {
+    margin-right: 18px;
+}
+
+.instagram-divider::after {
+    margin-left: 18px;
+}
+
+.help-text {
+    font-size: 12px;
+    color: #8e8e8e;
+    text-align: center;
+    line-height: 20px;
+    margin: 10px 24px;
+}
+
+.link-features {
+    background: #fff;
+    border: 1px solid #dbdbdb;
+    border-radius: 1px;
+    padding: 16px 24px;
+    margin: 0 24px 10px;
+}
+
+.feature-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.feature-list li {
+    font-size: 14px;
+    color: #262626;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+}
+
+.feature-list li:last-child {
+    margin-bottom: 0;
+}
+
+.feature-icon {
+    color: #0095f6;
+    margin-right: 8px;
+    font-size: 14px;
+}
+</style>
+{% endblock %}
+
 {% block content %}
-<!-- Hero Section -->
-<div class="hero-section">
-    <div class="container text-center">
-        <h1 class="hero-title">
-            <i class="fas fa-paper-plane me-3"></i>
-            Generate Message Links
-        </h1>
-        <p class="hero-subtitle">
-            Create secure, one-time use links to send messages via Telegram
-        </p>
-        <div class="row justify-content-center mt-4">
-            <div class="col-md-8">
-                <div class="stats-card">
-                    <div class="row">
-                        <div class="col-4">
-                            <div class="stats-number">{{ stats.total_links }}</div>
-                            <div class="stats-label">Active Links</div>
-                        </div>
-                        <div class="col-4">
-                            <div class="stats-number">{{ stats.total_messages }}</div>
-                            <div class="stats-label">Messages Sent</div>
-                        </div>
-                        <div class="col-4">
-                            <div class="stats-number">{{ stats.active_admins }}</div>
-                            <div class="stats-label">Active Admins</div>
-                        </div>
+<div class="container min-vh-100 d-flex align-items-center justify-content-center">
+    <div class="row w-100">
+        <div class="col-12">
+            <div class="instagram-container">
+                <div class="text-center p-4">
+                    <h1 class="instagram-logo">TelegramLinker</h1>
+                    <p style="font-size: 14px; color: #737373; margin-bottom: 20px;">
+                        Create secure links to receive messages via Telegram
+                    </p>
+                </div>
+                
+                <!-- Instagram-style Stats -->
+                <div class="instagram-stats">
+                    <div class="stat-item">
+                        <div class="stat-number">{{ stats.total_links }}</div>
+                        <div class="stat-label">Links</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number">{{ stats.total_messages }}</div>
+                        <div class="stat-label">Messages</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number">{{ stats.active_admins }}</div>
+                        <div class="stat-label">Admins</div>
                     </div>
                 </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Main Form -->
-<div class="container">
-    <div class="row justify-content-center">
-        <div class="col-lg-8">
-            <div class="card">
-                <div class="card-header">
-                    <h4 class="mb-0">
-                        <i class="fas fa-link me-2"></i>
-                        Generate New Message Link
-                    </h4>
-                </div>
-                <div class="card-body">
-                    <form method="POST" action="{{ url_for('generate_link') }}">
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label for="bot_token" class="form-label">
-                                        <i class="fas fa-robot me-1"></i>
-                                        Telegram Bot Token
-                                    </label>
-                                    <input type="text" 
-                                           class="form-control" 
-                                           id="bot_token" 
-                                           name="bot_token" 
-                                           placeholder="1234567890:ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefg"
-                                           required>
-                                    <div class="form-text">
-                                        Your Telegram bot token (format: numbers:long_string)
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label for="admin_id" class="form-label">
-                                        <i class="fas fa-user-shield me-1"></i>
-                                        Admin ID
-                                    </label>
-                                    <input type="text" 
-                                           class="form-control" 
-                                           id="admin_id" 
-                                           name="admin_id" 
-                                           placeholder="123456789"
-                                           required>
-                                    <div class="form-text">
-                                        Your Telegram user ID (numbers only)
-                                    </div>
-                                </div>
-                            </div>
+                
+                <!-- Instagram-style Form -->
+                <div class="instagram-form">
+                    <form method="POST" action="{{ url_for('generate_link') }}" id="generateForm">
+                        <div class="form-floating">
+                            <input type="text" 
+                                   class="form-control" 
+                                   id="bot_token" 
+                                   name="bot_token" 
+                                   placeholder="Bot Token"
+                                   required>
+                            <label for="bot_token">Bot Token</label>
                         </div>
                         
-                        <div class="alert alert-info">
-                            <i class="fas fa-info-circle me-2"></i>
-                            <strong>How it works:</strong>
-                            <ul class="mb-0 mt-2">
-                                <li>Generate a unique link with your bot token and admin ID</li>
-                                <li>Share the link with anyone who needs to send you messages</li>
-                                <li>Each link can be used only once and expires in 24 hours</li>
-                                <li>Messages will be sent directly to your Telegram account</li>
-                            </ul>
+                        <div class="form-floating">
+                            <input type="text" 
+                                   class="form-control" 
+                                   id="admin_id" 
+                                   name="admin_id" 
+                                   placeholder="Admin ID"
+                                   required>
+                            <label for="admin_id">Admin ID</label>
                         </div>
                         
-                        <div class="d-grid">
-                            <button type="submit" class="btn btn-primary btn-lg">
-                                <i class="fas fa-magic me-2"></i>
-                                Generate Link
-                            </button>
-                        </div>
+                        <button type="submit" class="btn btn-instagram" id="generateBtn">
+                            <span id="generateText">Generate Link</span>
+                            <i class="fas fa-spinner fa-spin ms-2 d-none" id="generateSpinner"></i>
+                        </button>
                     </form>
                 </div>
+                
+                <div class="help-text">
+                    <strong>Format:</strong> Bot Token should be in format "numbers:long_string"<br>
+                    <strong>Example:</strong> 1234567890:ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefg
+                </div>
+                
+                <div class="instagram-divider">How it works</div>
+                
+                <div class="link-features">
+                    <ul class="feature-list">
+                        <li>
+                            <i class="fas fa-link feature-icon"></i>
+                            Generate unique secure links
+                        </li>
+                        <li>
+                            <i class="fas fa-share feature-icon"></i>
+                            Share with anyone who needs to message you
+                        </li>
+                        <li>
+                            <i class="fas fa-clock feature-icon"></i>
+                            Links expire in 24 hours or after first use
+                        </li>
+                        <li>
+                            <i class="fas fa-telegram feature-icon"></i>
+                            Messages delivered directly to your Telegram
+                        </li>
+                    </ul>
+                </div>
             </div>
         </div>
     </div>
 </div>
+{% endblock %}
 
-<!-- Features Section -->
-<div class="container mt-5">
-    <div class="row">
-        <div class="col-lg-12">
-            <h3 class="text-center mb-4">Features</h3>
-            <div class="row">
-                <div class="col-md-4">
-                    <div class="card">
-                        <div class="card-body text-center">
-                            <i class="fas fa-shield-alt text-primary" style="font-size: 2.5rem;"></i>
-                            <h5 class="mt-3">Secure</h5>
-                            <p class="text-muted">One-time use links with automatic expiration for maximum security</p>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="card">
-                        <div class="card-body text-center">
-                            <i class="fas fa-bolt text-success" style="font-size: 2.5rem;"></i>
-                            <h5 class="mt-3">Fast</h5>
-                            <p class="text-muted">Instant link generation and message delivery via Telegram API</p>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="card">
-                        <div class="card-body text-center">
-                            <i class="fas fa-chart-line text-warning" style="font-size: 2.5rem;"></i>
-                            <h5 class="mt-3">Trackable</h5>
-                            <p class="text-muted">Monitor all your generated links and sent messages in admin panel</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
+{% block extra_js %}
+<script>
+document.getElementById('generateForm').addEventListener('submit', function(e) {
+    const botToken = document.getElementById('bot_token').value.trim();
+    const adminId = document.getElementById('admin_id').value.trim();
+    const generateBtn = document.getElementById('generateBtn');
+    const generateText = document.getElementById('generateText');
+    const generateSpinner = document.getElementById('generateSpinner');
+    
+    // Basic validation
+    if (!botToken || !adminId) {
+        e.preventDefault();
+        alert('Please fill in both Bot Token and Admin ID');
+        return;
+    }
+    
+    // Show loading state
+    generateBtn.disabled = true;
+    generateText.textContent = 'Generating...';
+    generateSpinner.classList.remove('d-none');
+});
+</script>
 {% endblock %}

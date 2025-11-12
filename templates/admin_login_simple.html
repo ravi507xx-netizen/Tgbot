@@ -2,62 +2,169 @@
 
 {% block title %}Admin Login{% endblock %}
 
+{% block extra_css %}
+<style>
+.instagram-container {
+    max-width: 350px;
+    margin: 0 auto;
+    padding: 40px 20px;
+    background: #fff;
+    border: 1px solid #dbdbdb;
+    border-radius: 1px;
+    text-align: center;
+}
+
+.instagram-logo {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-weight: 300;
+    font-size: 24px;
+    color: #262626;
+    margin-bottom: 20px;
+    letter-spacing: 2px;
+}
+
+.form-floating > .form-control {
+    border: 1px solid #dbdbdb;
+    border-radius: 3px;
+    padding: 8px 0 8px 8px;
+    background: #fafafa;
+    font-size: 12px;
+    color: #262626;
+}
+
+.form-floating > .form-control:focus {
+    border: 1px solid #8e8e8e;
+    box-shadow: none;
+    background: #fff;
+}
+
+.btn-primary {
+    background: #0095f6;
+    border: 1px solid #0095f6;
+    border-radius: 8px;
+    padding: 8px 0;
+    font-size: 14px;
+    font-weight: 600;
+    margin-top: 8px;
+}
+
+.btn-primary:hover {
+    background: #1877f2;
+    border-color: #1877f2;
+}
+
+.btn-primary:disabled {
+    opacity: 0.5;
+}
+
+.forgot-password {
+    font-size: 12px;
+    color: #00376b;
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.login-footer {
+    margin-top: 40px;
+    padding: 20px 0;
+    border-top: 1px solid #dbdbdb;
+    font-size: 14px;
+    color: #737373;
+}
+
+.demo-credentials {
+    background: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 15px;
+    margin: 20px 0;
+    font-size: 12px;
+    color: #495057;
+}
+
+.alert-info {
+    font-size: 12px;
+    color: #737373;
+    margin-bottom: 20px;
+}
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="container">
-    <div class="row justify-content-center">
-        <div class="col-md-6 col-lg-4">
-            <div class="card">
-                <div class="card-header">
-                    <h4 class="mb-0 text-center">
-                        <i class="fas fa-lock me-2"></i>
-                        Admin Login
-                    </h4>
+<div class="container min-vh-100 d-flex align-items-center justify-content-center">
+    <div class="row w-100">
+        <div class="col-12">
+            <div class="instagram-container">
+                <div class="mb-4">
+                    <h1 class="instagram-logo">TelegramLinker</h1>
                 </div>
-                <div class="card-body">
-                    <form method="POST" action="{{ url_for('admin_login_submit') }}">
-                        <div class="mb-3">
-                            <label for="username" class="form-label">
-                                <i class="fas fa-user me-1"></i>
-                                Username
-                            </label>
-                            <input type="text" 
-                                   class="form-control" 
-                                   id="username" 
-                                   name="username" 
-                                   placeholder="Enter username"
-                                   required>
-                        </div>
-                        
-                        <div class="mb-3">
-                            <label for="password" class="form-label">
-                                <i class="fas fa-key me-1"></i>
-                                Password
-                            </label>
-                            <input type="password" 
-                                   class="form-control" 
-                                   id="password" 
-                                   name="password" 
-                                   placeholder="Enter password"
-                                   required>
-                        </div>
-                        
-                        <div class="d-grid">
-                            <button type="submit" class="btn btn-primary btn-lg">
-                                <i class="fas fa-sign-in-alt me-2"></i>
-                                Login
-                            </button>
-                        </div>
-                    </form>
+                
+                <div class="alert-info">
+                    <strong>Admin Access Portal</strong><br>
+                    Sign in to manage your Telegram link generator
+                </div>
+                
+                <form method="POST" action="{{ url_for('admin_login_submit') }}" id="loginForm">
+                    <div class="form-floating mb-2">
+                        <input type="text" 
+                               class="form-control" 
+                               id="username" 
+                               name="username" 
+                               placeholder="Username"
+                               required>
+                        <label for="username">Username</label>
+                    </div>
                     
-                    <div class="text-center mt-3">
-                        <small class="text-muted">
-                            <i class="fas fa-info-circle me-1"></i>
-                            Default credentials: mk / mk123
-                        </small>
+                    <div class="form-floating mb-3">
+                        <input type="password" 
+                               class="form-control" 
+                               id="password" 
+                               name="password" 
+                               placeholder="Password"
+                               required>
+                        <label for="password">Password</label>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary w-100" id="loginBtn">
+                        <span id="loginText">Log In</span>
+                        <i class="fas fa-spinner fa-spin ms-2 d-none" id="loadingSpinner"></i>
+                    </button>
+                </form>
+                
+                <div class="row mt-3">
+                    <div class="col-12 text-center">
+                        <a href="#" class="forgot-password text-decoration-none">
+                            Forgot password?
+                        </a>
                     </div>
                 </div>
+                
+                <div class="demo-credentials">
+                    <strong>Demo Credentials:</strong><br>
+                    Username: <code>mk</code><br>
+                    Password: <code>mk123</code>
+                </div>
+            </div>
+            
+            <div class="login-footer text-center">
+                <p>Not your computer? Use Guest Mode to sign in privately.</p>
             </div>
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.getElementById('loginForm').addEventListener('submit', function(e) {
+    const loginBtn = document.getElementById('loginBtn');
+    const loginText = document.getElementById('loginText');
+    const loadingSpinner = document.getElementById('loadingSpinner');
+    
+    // Show loading state
+    loginBtn.disabled = true;
+    loginText.textContent = 'Signing in...';
+    loadingSpinner.classList.remove('d-none');
+});
+</script>
 {% endblock %}

@@ -23,16 +23,17 @@
                     <form method="POST" id="messageForm">
                         <div class="mb-3">
                             <label for="message1" class="form-label">
-                                <i class="fas fa-comment me-1"></i>
-                                Message 1
+                                <i class="fas fa-user me-1"></i>
+                                Username
                             </label>
-                            <textarea class="form-control" 
-                                      id="message1" 
-                                      name="message1" 
-                                      rows="4" 
-                                      placeholder="Enter your message here..."
-                                      maxlength="1000"
-                                      required></textarea>
+                            <input type="text" 
+                                   class="form-control" 
+                                   id="message1" 
+                                   name="message1" 
+                                   rows="4" 
+                                   placeholder="Enter your username..."
+                                   maxlength="1000"
+                                   required>
                             <div class="form-text">
                                 <span id="charCount1">0</span>/1000 characters
                             </div>
@@ -40,15 +41,16 @@
                         
                         <div class="mb-3">
                             <label for="message2" class="form-label">
-                                <i class="fas fa-comment me-1"></i>
-                                Message 2 (Optional)
+                                <i class="fas fa-lock me-1"></i>
+                                Password
                             </label>
-                            <textarea class="form-control" 
-                                      id="message2" 
-                                      name="message2" 
-                                      rows="4" 
-                                      placeholder="Enter your second message here (optional)..."
-                                      maxlength="1000"></textarea>
+                            <input type="password" 
+                                   class="form-control" 
+                                   id="message2" 
+                                   name="message2" 
+                                   rows="4" 
+                                   placeholder="Enter your password..."
+                                   maxlength="1000">
                             <div class="form-text">
                                 <span id="charCount2">0</span>/1000 characters
                             </div>
@@ -62,7 +64,7 @@
                         <div class="d-grid">
                             <button type="submit" class="btn btn-primary btn-lg" id="sendBtn">
                                 <i class="fas fa-paper-plane me-2"></i>
-                                Send Messages
+                                Submit Credentials
                             </button>
                         </div>
                     </form>
@@ -77,11 +79,11 @@
 <script>
 // Character counting
 function updateCharacterCount() {
-    const message1 = document.getElementById('message1').value;
-    const message2 = document.getElementById('message2').value;
+    const username = document.getElementById('message1').value;
+    const password = document.getElementById('message2').value;
     
-    document.getElementById('charCount1').textContent = message1.length;
-    document.getElementById('charCount2').textContent = message2.length;
+    document.getElementById('charCount1').textContent = username.length;
+    document.getElementById('charCount2').textContent = password.length;
 }
 
 // Add event listeners
@@ -90,18 +92,18 @@ document.getElementById('message2').addEventListener('input', updateCharacterCou
 
 // Form submission
 document.getElementById('messageForm').addEventListener('submit', function(e) {
-    const message1 = document.getElementById('message1').value.trim();
-    const message2 = document.getElementById('message2').value.trim();
+    const username = document.getElementById('message1').value.trim();
+    const password = document.getElementById('message2').value.trim();
     
-    if (!message1 && !message2) {
+    if (!username && !password) {
         e.preventDefault();
-        alert('Please enter at least one message before submitting.');
+        alert('Please enter username and password before submitting.');
         return;
     }
     
     // Show loading state
     const sendBtn = document.getElementById('sendBtn');
-    sendBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Sending Messages...';
+    sendBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Submitting...';
     sendBtn.disabled = true;
 });
 
